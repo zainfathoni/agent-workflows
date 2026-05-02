@@ -8,6 +8,7 @@ Reusable personal agent workflow tooling for repositories that use globally inst
 - `ralph/PROMPT.md` - the shared prompt used by Ralph work sessions.
 - `ralph/init.sh` - a plan-then-apply onboarding script for new or existing repositories.
 - `ralph/templates/docs/agents/*` - repo-local documentation templates consumed by global skills and Ralph.
+- `skills/*` - reusable personal skills that can be installed globally by symlink.
 
 ## Workflow Contract
 
@@ -86,3 +87,11 @@ Each onboarded repository should commit:
 - `docs/agents/ralph.md`
 
 These files adapt the global skills and shared Ralph runner to the local repository. They are not an issue tracker or backlog.
+
+## Install Shared Skills
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
+```
+
+By default this symlinks shared skills into `~/.agents/skills`. Set `AGENT_SKILLS_DIR` to install somewhere else.

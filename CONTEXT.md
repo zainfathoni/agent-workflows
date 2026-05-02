@@ -36,6 +36,18 @@ _Avoid_: Backlog, ticket mirror
 An untracked entrypoint such as `./ralph.sh` or `.ralph/ralph.sh` pointing from a target repository to shared tooling in Agent Workflows.
 _Avoid_: Installed copy, checked-in runner
 
+**Shared Skill**:
+A reusable skill stored in Agent Workflows and installed into the global agent skills directory by symlink.
+_Avoid_: Repo-local skill, copied skill
+
+**Private Review**:
+A review workflow where pending review comments and replies must remain private unless the user explicitly submits or publishes them.
+_Avoid_: Team review, public review
+
+**Team Review**:
+A colleague-facing review workflow where feedback may be prepared for publication and published only when explicitly requested.
+_Avoid_: Private review
+
 ## Relationships
 
 - **Agent Workflows** provides **Ralph** and onboarding tooling.
@@ -44,9 +56,13 @@ _Avoid_: Installed copy, checked-in runner
 - **Delivery Status** is represented by GitHub Project `Status` only when a Project is configured.
 - **Repo-Local Agent Docs** adapt global skills and **Ralph** to a specific repository.
 - **Local Symlinks** provide convenient entrypoints without committing shared runner copies into application repositories.
+- A **Shared Skill** may be installed globally by symlink, while project-specific skill behavior should remain in repo-local skills.
+- **Private Review** skills protect pending review artifacts.
+- **Team Review** skills manage colleague-visible review feedback and thread resolution.
 
 ## Flagged Ambiguities
 
 - **Status** can mean triage state or delivery status. Use **Triage State** for labels and **Delivery Status** for GitHub Project `Status`.
 - **Ralph** is not a planning or triage mechanism. Planning and triage are manually triggered through skills.
 - **Repo-Local Agent Docs** are not a second source of truth for work. GitHub Issues remain the work source of truth.
+- **Private Review** and **Team Review** are intentionally separate. Do not use private pending-review cleanup rules to mutate team-visible threads.
