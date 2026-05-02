@@ -23,6 +23,8 @@ Before selecting work, read these files if they exist:
 
 If those docs conflict with the runtime overrides, stop and print `<status>BLOCKED</status>`.
 
+If an ADR directory is absent, check the repo's documented ADR location such as `docs/decisions/`. Missing ADR directories are not a blocker by themselves.
+
 ## Required Labels
 
 Every issue you work on must have exactly one category label. Canonical category roles are:

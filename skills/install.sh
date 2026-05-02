@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Symlink shared skills into the global agent skills directory.
 
 set -euo pipefail

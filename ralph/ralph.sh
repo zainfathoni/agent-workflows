@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Ralph - execution-only GitHub Agent Queue runner.
 #
 # Usage:
@@ -21,40 +21,80 @@
 #   RALPH_AUTO_APPROVE                 default: 1; set 0 to avoid permission auto-approval
 #   RALPH_SLEEP_SECONDS                default: 2
 #   RALPH_ITERATION_TIMEOUT_SECONDS    default: 1200; set 0 to disable
+#   RALPH_DRY_RUN                      default: 0; set 1 to print resolved config and exit
+#   RALPH_PRINT_CONFIG_ONLY            default: 0; set 1 to print resolved config and exit
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MAX_ITERATIONS=${1:-10}
+DEFAULT_WORKSPACE=$SCRIPT_DIR
+if [ "$(basename "$SCRIPT_DIR")" = ".ralph" ]; then
+  DEFAULT_WORKSPACE="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
+
+MAX_ITERATIONS=10
+MAX_ITERATIONS_SET=0
 SLEEP_SECONDS=${RALPH_SLEEP_SECONDS:-2}
 ITERATION_TIMEOUT_SECONDS=${RALPH_ITERATION_TIMEOUT_SECONDS:-1200}
 RUNNER=${RALPH_RUNNER:-}
 MODEL=${RALPH_MODEL:-}
 NOTE=${RALPH_NOTE:-}
 ISSUE=${RALPH_ISSUE:-}
-WORKSPACE=${RALPH_WORKSPACE:-$SCRIPT_DIR}
+WORKSPACE=${RALPH_WORKSPACE:-$DEFAULT_WORKSPACE}
 REPO=${RALPH_REPO:-}
 PROJECT_OWNER=${RALPH_PROJECT_OWNER:-}
 PROJECT_NUMBER=${RALPH_PROJECT_NUMBER:-}
 BRANCH_PREFIX=${RALPH_BRANCH_PREFIX:-agent/issue-}
 AUTO_APPROVE=${RALPH_AUTO_APPROVE:-1}
+DRY_RUN=${RALPH_DRY_RUN:-0}
+PRINT_CONFIG_ONLY=${RALPH_PRINT_CONFIG_ONLY:-0}
 PROMPT_SOURCE=${RALPH_PROMPT_SOURCE:-$SCRIPT_DIR/PROMPT.md}
 
+REPO_FROM_ENV=${RALPH_REPO+x}
+PROJECT_OWNER_FROM_ENV=${RALPH_PROJECT_OWNER+x}
+PROJECT_NUMBER_FROM_ENV=${RALPH_PROJECT_NUMBER+x}
+BRANCH_PREFIX_FROM_ENV=${RALPH_BRANCH_PREFIX+x}
+
 usage() {
-  printf 'Usage: ./ralph.sh [max_iterations]\n'
+  printf 'Usage: ./ralph.sh [max_iterations] [--dry-run]\n'
   printf '\n'
   printf 'Examples:\n'
   printf '  ./ralph.sh\n'
   printf '  ./ralph.sh 1\n'
+  printf '  ./ralph.sh --dry-run\n'
   printf '  RALPH_RUNNER=claude ./ralph.sh 1\n'
   printf '  RALPH_ISSUE=168 ./ralph.sh 1\n'
   printf '  RALPH_PROJECT_OWNER=zainfathoni RALPH_PROJECT_NUMBER=6 ./ralph.sh\n'
 }
 
-if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
-  usage
-  exit 0
-fi
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --dry-run|--print-config)
+      DRY_RUN=1
+      PRINT_CONFIG_ONLY=1
+      shift
+      ;;
+    ''|*[!0-9]*)
+      printf 'Unknown argument: %s\n' "$1" >&2
+      usage >&2
+      exit 1
+      ;;
+    *)
+      if [ "$MAX_ITERATIONS_SET" = "1" ]; then
+        printf 'max_iterations was provided more than once.\n' >&2
+        usage >&2
+        exit 1
+      fi
+      MAX_ITERATIONS=$1
+      MAX_ITERATIONS_SET=1
+      shift
+      ;;
+  esac
+done
 
 if [ ! -d "$WORKSPACE" ]; then
   printf 'Configured workspace does not exist: %s\n' "$WORKSPACE" >&2
@@ -76,6 +116,20 @@ fi
 if ! [[ "$ITERATION_TIMEOUT_SECONDS" =~ ^[0-9]+$ ]]; then
   printf 'RALPH_ITERATION_TIMEOUT_SECONDS must be a non-negative integer: %s\n' "$ITERATION_TIMEOUT_SECONDS" >&2
   exit 1
+fi
+
+if [ "$PRINT_CONFIG_ONLY" != "0" ] && [ "$PRINT_CONFIG_ONLY" != "1" ]; then
+  printf 'RALPH_PRINT_CONFIG_ONLY must be 0 or 1: %s\n' "$PRINT_CONFIG_ONLY" >&2
+  exit 1
+fi
+
+if [ "$DRY_RUN" != "0" ] && [ "$DRY_RUN" != "1" ]; then
+  printf 'RALPH_DRY_RUN must be 0 or 1: %s\n' "$DRY_RUN" >&2
+  exit 1
+fi
+
+if [ "$DRY_RUN" = "1" ]; then
+  PRINT_CONFIG_ONLY=1
 fi
 
 if [ -n "$ISSUE" ] && [ "$MAX_ITERATIONS" -gt 1 ]; then
@@ -146,6 +200,51 @@ check_gh_auth() {
     printf 'GitHub CLI is not authenticated. Run: gh auth login\n' >&2
     exit 1
   fi
+}
+
+load_repo_ralph_defaults() {
+  local docs_file="docs/agents/ralph.md"
+
+  if [ ! -f "$docs_file" ]; then
+    return
+  fi
+
+  while IFS=$'\t' read -r key value; do
+    case "$key" in
+      Repository)
+        if [ -z "${REPO_FROM_ENV:-}" ] && [ -z "$REPO" ] && [ "$value" != "none" ]; then
+          REPO=$value
+        fi
+        ;;
+      "GitHub Project owner")
+        if [ -z "${PROJECT_OWNER_FROM_ENV:-}" ] && [ -z "$PROJECT_OWNER" ] && [ "$value" != "none" ]; then
+          PROJECT_OWNER=$value
+        fi
+        ;;
+      "GitHub Project number")
+        if [ -z "${PROJECT_NUMBER_FROM_ENV:-}" ] && [ -z "$PROJECT_NUMBER" ] && [ "$value" != "none" ]; then
+          PROJECT_NUMBER=$value
+        fi
+        ;;
+      "Branch prefix")
+        if [ -z "${BRANCH_PREFIX_FROM_ENV:-}" ] && [ "$value" != "none" ]; then
+          BRANCH_PREFIX=$value
+        fi
+        ;;
+    esac
+  done < <(python3 - "$docs_file" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+path = Path(sys.argv[1])
+pattern = re.compile(r"^- ([^:]+): `([^`]*)`")
+for line in path.read_text(encoding="utf-8").splitlines():
+    match = pattern.match(line)
+    if match:
+        print(f"{match.group(1)}\t{match.group(2)}")
+PY
+)
 }
 
 resolve_repo_metadata() {
@@ -397,11 +496,21 @@ run_iteration() {
 
 require_command gh
 require_command python3
-resolve_runner
-check_runner_auth
 check_gh_auth
+load_repo_ralph_defaults
 resolve_repo_metadata
 resolve_project_metadata
+
+if [ "$PRINT_CONFIG_ONLY" != "1" ]; then
+  resolve_runner
+  check_runner_auth
+else
+  if [ -n "$RUNNER" ]; then
+    RUNNER="$RUNNER (not validated in dry-run)"
+  else
+    RUNNER="not checked (dry-run)"
+  fi
+fi
 
 if [ ! -f "$PROMPT_SOURCE" ]; then
   printf 'Prompt file not found: %s\n' "$PROMPT_SOURCE" >&2
@@ -433,6 +542,11 @@ else
 fi
 if [ -n "$ISSUE" ]; then
   printf 'Forced issue: #%s\n' "$ISSUE"
+fi
+
+if [ "$PRINT_CONFIG_ONLY" = "1" ]; then
+  printf 'Dry-run mode: rendered prompt and resolved configuration; exiting before agent iteration.\n'
+  exit 0
 fi
 
 READY_FOR_REVIEW_COUNT=0

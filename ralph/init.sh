@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Onboard a repository for globally installed skills and shared Ralph.
 
 set -euo pipefail

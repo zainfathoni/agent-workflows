@@ -50,6 +50,12 @@ After onboarding, run from the target repository:
 ./ralph.sh
 ```
 
+Debug resolved configuration without invoking an agent:
+
+```bash
+./ralph.sh --dry-run
+```
+
 Run exactly one iteration:
 
 ```bash
@@ -76,6 +82,10 @@ Common overrides:
 - `RALPH_NOTE` - runtime note appended to the prompt.
 - `RALPH_BRANCH_PREFIX` - issue branch prefix, default `agent/issue-`.
 - `RALPH_AUTO_APPROVE` - default `1`; set `0` to avoid permission auto-approval.
+- `RALPH_DRY_RUN` - default `0`; set `1` to print resolved config and exit before invoking an agent.
+- `RALPH_PRINT_CONFIG_ONLY` - default `0`; set `1` to print resolved config and exit before invoking an agent.
+
+When present, `docs/agents/ralph.md` supplies default values for `RALPH_REPO`, `RALPH_PROJECT_OWNER`, `RALPH_PROJECT_NUMBER`, and `RALPH_BRANCH_PREFIX`. Environment variables override those repo-local defaults.
 
 ## Repository Docs
 
