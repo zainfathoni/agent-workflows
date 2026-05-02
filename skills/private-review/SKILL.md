@@ -81,18 +81,39 @@ EOF
 
 GitHub allows only one pending review per user per PR.
 
-If you need to revise draft inline comments after creating a pending review, prefer deleting and recreating the full pending review rather than trying to stack another pending review.
+If you need to revise draft inline comments after creating a pending review, replace the pending review with one complete merged comment set rather than trying to stack another pending review.
+
+Before replacing an existing pending review:
+
+- Identify the current user's pending review.
+- Fetch and inspect the existing draft body and inline comments.
+- Compare existing comments against the new review comments by `path`, `line`, and issue content.
+- Preserve or merge every existing comment that is still valid and not a true duplicate.
+- If any existing comment may be valid but you cannot confirm from the diff, stop and ask instead of deleting the draft.
+- Never delete another user's pending review.
 
 ```bash
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 ME=$(gh api user --jq .login)
 gh api repos/$REPO/pulls/<pr-number>/reviews --paginate \
-  | jq --arg me "$ME" '.[] | select(.state=="PENDING" and .user.login==$me) | {id,node_id,user:.user.login}'
+  | jq --arg me "$ME" '.[] | select(.state=="PENDING" and .user.login==$me) | {id,node_id,user:.user.login,body}'
+
+gh api repos/$REPO/pulls/<pr-number>/reviews/<numeric-review-id> \
+  > /tmp/pr-<pr-number>-review-<numeric-review-id>.json
+
+gh api repos/$REPO/pulls/<pr-number>/reviews/<numeric-review-id>/comments --paginate \
+  > /tmp/pr-<pr-number>-review-<numeric-review-id>-comments.json
+```
+
+Only after the merged replacement payload is complete, delete and recreate the pending review:
+
+```bash
+REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 
 gh api repos/$REPO/pulls/<pr-number>/reviews/<numeric-review-id> --method DELETE
 ```
 
-Then recreate the pending review with the complete updated comment set.
+Then recreate the pending review with the complete merged comment set.
 
 ### 6. Submit Only On Explicit Instruction
 
@@ -121,5 +142,6 @@ Allowed submission events are `COMMENT`, `APPROVE`, and `REQUEST_CHANGES`.
 
 - Never submit a pending review unless explicitly asked.
 - Never use `"event": "PENDING"`.
+- Never delete a pending review before inspecting and merging any still-valid existing comments.
 - Never approve if unresolved correctness, security, data integrity, authorization, data-ownership, or missing-test concerns remain.
 - If GitHub rejects comment line numbers, re-read the diff and correct the line mapping instead of submitting a weaker top-level review.
