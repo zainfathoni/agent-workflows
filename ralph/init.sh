@@ -87,13 +87,17 @@ if [ -n "$PROJECT_NUMBER" ]; then
   PROJECT_TITLE=$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --jq '.title')
 fi
 
+AGENT_FILES=()
 if [ -f CLAUDE.md ]; then
-  AGENT_FILE=CLAUDE.md
-elif [ -f AGENTS.md ]; then
-  AGENT_FILE=AGENTS.md
-else
-  AGENT_FILE=AGENTS.md
+  AGENT_FILES+=(CLAUDE.md)
 fi
+if [ -f AGENTS.md ]; then
+  AGENT_FILES+=(AGENTS.md)
+fi
+if [ "${#AGENT_FILES[@]}" -eq 0 ]; then
+  AGENT_FILES=(AGENTS.md)
+fi
+AGENT_FILES_DISPLAY=$(IFS=,; printf '%s' "${AGENT_FILES[*]}")
 
 ENTRYPOINT_MODE=root
 if [ -L ralph.sh ] && [ -L PROMPT.md ] && [ "$(readlink ralph.sh)" = "$SHARED_RALPH_DIR/ralph.sh" ] && [ "$(readlink PROMPT.md)" = "$SHARED_RALPH_DIR/PROMPT.md" ]; then
@@ -106,7 +110,7 @@ printf 'Agent Workflows onboarding plan\n'
 printf 'Workspace: %s\n' "$WORKSPACE"
 printf 'Repository: %s\n' "$REPO"
 printf 'Default branch: %s\n' "$DEFAULT_BRANCH"
-printf 'Agent instruction file: %s\n' "$AGENT_FILE"
+printf 'Agent instruction file(s): %s\n' "$AGENT_FILES_DISPLAY"
 if [ "$PROJECT_CONFIGURED" -eq 1 ]; then
   printf 'GitHub Project: %s/%s (%s)\n' "$PROJECT_OWNER" "$PROJECT_NUMBER" "$PROJECT_TITLE"
 else
@@ -129,7 +133,7 @@ if [ "$YES" -ne 1 ]; then
   esac
 fi
 
-python3 - "$SHARED_RALPH_DIR" "$WORKSPACE" "$REPO" "$DEFAULT_BRANCH" "$PROJECT_CONFIGURED" "$PROJECT_OWNER" "${PROJECT_NUMBER:-none}" <<'PY'
+python3 - "$SHARED_RALPH_DIR" "$WORKSPACE" "$REPO" "$DEFAULT_BRANCH" "$PROJECT_CONFIGURED" "$PROJECT_OWNER" "${PROJECT_NUMBER:-none}" "$AGENT_FILES_DISPLAY" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -141,6 +145,7 @@ default_branch = sys.argv[4]
 project_configured = sys.argv[5]
 project_owner = sys.argv[6]
 project_number = sys.argv[7]
+agent_files = [name for name in sys.argv[8].split(",") if name]
 
 values = {
     "REPO": repo,
@@ -166,20 +171,20 @@ for relative in [
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(render((template_root / relative).read_text(encoding="utf-8")), encoding="utf-8")
 
-agent_file = workspace / ("CLAUDE.md" if (workspace / "CLAUDE.md").exists() else "AGENTS.md")
-if not agent_file.exists():
-    agent_file.write_text("# Agent Instructions\n\n", encoding="utf-8")
-
 block = render((template_root / "agent-skills-block.md").read_text(encoding="utf-8")).strip() + "\n"
-content = agent_file.read_text(encoding="utf-8")
 pattern = re.compile(r"(?:^|\n)## Agent skills\n.*?(?=\n## |\Z)", re.S)
-if pattern.search(content):
-    content = pattern.sub("\n" + block.rstrip(), content).rstrip() + "\n"
-else:
-    if not content.endswith("\n"):
-        content += "\n"
-    content = content.rstrip() + "\n\n" + block
-agent_file.write_text(content, encoding="utf-8")
+for agent_file_name in agent_files:
+    agent_file = workspace / agent_file_name
+    if not agent_file.exists():
+        agent_file.write_text("# Agent Instructions\n\n", encoding="utf-8")
+    content = agent_file.read_text(encoding="utf-8")
+    if pattern.search(content):
+        content = pattern.sub("\n" + block.rstrip(), content).rstrip() + "\n"
+    else:
+        if not content.endswith("\n"):
+            content += "\n"
+        content = content.rstrip() + "\n\n" + block
+    agent_file.write_text(content, encoding="utf-8")
 PY
 
 ensure_label() {
@@ -230,4 +235,4 @@ else
   add_exclude /.ralph/
 fi
 
-printf 'Agent Workflows setup complete. Review and commit docs/agents plus %s changes if desired.\n' "$AGENT_FILE"
+printf 'Agent Workflows setup complete. Review and commit docs/agents plus %s changes if desired.\n' "$AGENT_FILES_DISPLAY"
