@@ -69,6 +69,8 @@ gh api graphql -F owner="$OWNER" -F repo="$NAME" -F number=<pr-number> -f query=
 }'
 ```
 
+GitHub GraphQL queries are read-only here, but `gh api graphql` uses HTTP POST. If a smoke test or environment policy forbids all POST requests, use the REST review/comment endpoints only and state that exact review-thread resolution state and GraphQL node ids were not inspected.
+
 ### 2. Triage And Group Threads
 
 When there are more than a few threads, classify before editing:

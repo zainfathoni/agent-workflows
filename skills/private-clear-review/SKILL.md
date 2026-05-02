@@ -60,6 +60,8 @@ gh api graphql \
   -f query='query($owner:String!, $repo:String!, $number:Int!) { repository(owner:$owner, name:$repo) { pullRequest(number:$number) { reviewThreads(first:100) { nodes { id isResolved path line startLine comments(first:50) { nodes { id databaseId author { login } body state createdAt replyTo { id databaseId author { login } body } } } } } } } }'
 ```
 
+GitHub GraphQL queries are read-only here, but `gh api graphql` uses HTTP POST. If a smoke test or environment policy forbids all POST requests, use the REST review/comment endpoints only and state that exact review-thread resolution state and GraphQL node ids were not inspected.
+
 Only proceed when the pending review still belongs to the current user and the requested cleanup scope is unambiguous.
 
 ### 4. Delete The Intended Pending Review

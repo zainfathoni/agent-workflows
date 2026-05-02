@@ -49,6 +49,16 @@ gh api graphql -F owner="$OWNER" -F repo="$NAME" -F number=<pr-number> -f query=
 }'
 ```
 
+GitHub GraphQL queries are read-only here, but `gh api graphql` uses HTTP POST. If a smoke test or environment policy forbids all POST requests, use REST endpoints as a fallback:
+
+```bash
+REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+gh api repos/$REPO/pulls/<pr-number>/reviews --paginate
+gh api repos/$REPO/pulls/<pr-number>/comments --paginate
+```
+
+The REST fallback can inspect review comments and replies, but it cannot reliably report exact thread resolution state or provide the thread node ids needed for `resolveReviewThread`. In that case, report the limitation and do not resolve anything.
+
 ### 2. Confirm Resolve Set
 
 For each thread, confirm:
