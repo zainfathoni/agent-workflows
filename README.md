@@ -7,6 +7,7 @@ Reusable personal agent workflow tooling for repositories that use globally inst
 - `ralph/ralph.sh` - an execution-only Agent Queue runner.
 - `ralph/PROMPT.md` - the shared prompt used by Ralph work sessions.
 - `ralph/init.sh` - a plan-then-apply onboarding script for new or existing repositories.
+- `ralph/github-blockers.sh` - audits, syncs, and checks real GitHub blocked-by relationships.
 - `ralph/templates/docs/agents/*` - repo-local documentation templates consumed by global skills and Ralph.
 - `skills/*` - reusable personal skills that can be installed globally by symlink.
 
@@ -18,7 +19,7 @@ Planning and triage are manual, maintainer-triggered steps:
 - `/to-issues` creates vertical-slice implementation issues.
 - `/triage` evaluates readiness and applies triage labels.
 
-Ralph starts after triage. It only consumes issues already marked `ready-for-agent`.
+Ralph starts after triage. It only consumes issues already marked `ready-for-agent`. It also treats GitHub's issue dependency graph as the canonical blocker source: issues with open `blockedBy` dependencies are not eligible for execution.
 
 ## Onboard A Repository
 
@@ -66,6 +67,21 @@ Force one issue while still validating all Agent Queue rules:
 
 ```bash
 RALPH_ISSUE=168 ./ralph.sh 1
+```
+
+## Blocked-by Relationships
+
+Markdown `Blocked by: #123` lines are documentation only. GitHub's real issue dependency graph is the canonical blocker source. Use the helper to audit or repair repositories where markdown blockers may not have matching GitHub relationships:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh audit --repo OWNER/REPO --state all
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh sync --repo OWNER/REPO --state all
+```
+
+Before Ralph claims work, it must verify the selected issue has no open real blockers:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh check-issue --repo OWNER/REPO --issue 168
 ```
 
 ## Environment

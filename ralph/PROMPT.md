@@ -62,7 +62,8 @@ Do not wait for more user input after printing the marker.
 3. Verify `gh` is authenticated.
 4. Verify the configured repository default branch.
 5. If GitHub Project configured is `1`, verify Project access and the `Status` options named exactly `Todo`, `In Progress`, and `Done`.
-6. Do not mutate GitHub state until issue selection, branch preparation, and worktree safety checks pass.
+6. Verify the blocker helper is available at `~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh` when strict dependency checks are needed.
+7. Do not mutate GitHub state until issue selection, branch preparation, dependency checks, and worktree safety checks pass.
 
 Useful commands:
 
@@ -108,9 +109,19 @@ Fresh-work rules:
 - If a GitHub Project is configured, the issue is in the configured Project.
 - If a GitHub Project is configured, the issue Project `Status` is `Todo`.
 - The issue does not already have an open linked PR.
-- The issue is not blocked by an open issue, unresolved dependency, missing product decision, missing external access, or missing human input.
+- The issue has no open `blockedBy` issue dependency according to GitHub's issue dependency graph.
+- The issue is not blocked by any unresolved dependency, missing product decision, missing external access, or missing human input discovered in the body, comments, labels, Project item, or linked PRs.
 
-Inspect the issue body, comments, labels, Project item when configured, and linked PRs before deciding.
+Inspect the issue body, comments, labels, Project item when configured, linked PRs, and GitHub's real `blockedBy` dependency edges before deciding. Markdown such as `Blocked by: #123` is documentation only and must not be treated as the canonical blocker state unless the matching GitHub dependency edge exists.
+
+Useful dependency commands:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh check-issue --repo <repo> --issue <number>
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh audit --repo <repo> --state all
+```
+
+If a forced or fresh issue has an open GitHub `blockedBy` dependency, it is not eligible. Do not claim it. If the issue is labeled `ready-for-agent`, demote it using the Not Actually Ready flow and mention the open blocker.
 
 ## Prepare Branch Before Claiming
 
