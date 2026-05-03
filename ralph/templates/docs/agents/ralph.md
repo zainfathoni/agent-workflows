@@ -23,8 +23,27 @@ Fresh work must satisfy all of these rules:
 - The issue has exactly one category role.
 - The issue has exactly one triage-state role, and it is `ready-for-agent`.
 - The issue has no open linked PR.
+- The issue has no open `blockedBy` issue dependency according to GitHub's issue dependency graph.
 - The issue is not blocked by unresolved dependencies, missing product decisions, missing external access, or missing human input.
 - If a GitHub Project is configured, the issue is in the Project with `Status: Todo`.
+
+## Blockers
+
+GitHub's issue dependency graph is the canonical source for issue-to-issue blockers. Markdown such as `Blocked by: #123` is documentation only and must have a matching GitHub `blockedBy` relationship before the issue is considered correctly triaged.
+
+Before claiming an issue, Ralph must verify that the issue has no open GitHub `blockedBy` dependencies:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh check-issue --repo {{REPO}} --issue <number>
+```
+
+If the check reports an open blocker, Ralph must not claim the issue. If the issue is labeled `ready-for-agent`, use the Not Actually Ready flow and mention the open blocker. Closed blocker relationships may remain linked and do not prevent execution.
+
+Maintainers can reconcile markdown blocker notes into real GitHub dependency edges with:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh sync --repo {{REPO}} --state all
+```
 
 ## Handoff
 
