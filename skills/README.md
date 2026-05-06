@@ -2,6 +2,10 @@
 
 Reusable personal skills that should be available across projects.
 
+## Workflow Skills
+
+- `fizzy` - manage Fizzy boards, cards, steps, comments, reactions, and pins. Card descriptions must be authored as HTML and card relationships must be linked.
+
 ## Install
 
 Install or update all shared skills by symlinking them into the global skills directory:
