@@ -27,6 +27,12 @@ Fresh work must satisfy all of these rules:
 - The issue is not blocked by unresolved dependencies, missing product decisions, missing external access, or missing human input.
 - If a GitHub Project is configured, the issue is in the Project with `Status: Todo`.
 
+If a GitHub Project item is labeled `ready-for-agent` but still has a stale/custom queue status such as `Ready` or `Backlog`, Ralph should repair that dashboard drift to `Status: Todo` before selecting work, as long as the issue is open, unassigned, and has no open linked PR. Prefer the shared helper when available:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/ralph/project-status-repair.sh --repo {{REPO}} --project-owner {{PROJECT_OWNER}} --project-number {{PROJECT_NUMBER}}
+```
+
 ## Blockers
 
 GitHub's issue dependency graph is the canonical source for issue-to-issue blockers. Markdown such as `Blocked by: #123` is documentation only and must have a matching GitHub `blockedBy` relationship before the issue is considered correctly triaged.
