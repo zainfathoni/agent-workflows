@@ -10,6 +10,7 @@ If a `Runtime Overrides` section appears above this prompt, use those values ins
 - GitHub Projects are optional dashboards.
 - Triage state is represented by labels, not by Project `Status`.
 - Project `Status`, when configured, is delivery progress: `Todo`, `In Progress`, `Done`.
+- Stale/custom Project statuses such as `Ready` or `Backlog` are dashboard drift, not triage state. Repair safe drift to `Todo` instead of silently skipping `ready-for-agent` work.
 - Ralph is execution-only. Do not run `/to-prd`, `/to-issues`, or `/triage`.
 - Do not use local ticket mirrors, Beads, or repo-local backlog files for this workflow.
 
@@ -61,7 +62,7 @@ Do not wait for more user input after printing the marker.
 2. Read the repo-local agent docs and relevant ADRs before selecting work.
 3. Verify `gh` is authenticated.
 4. Verify the configured repository default branch.
-5. If GitHub Project configured is `1`, verify Project access and the `Status` options named exactly `Todo`, `In Progress`, and `Done`.
+5. If GitHub Project configured is `1`, verify Project access and the `Status` options named `Todo`, `In Progress`, and `Done`. Extra Project status options are allowed, but they are not Agent Queue eligibility states.
 6. Verify the blocker helper is available at `~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh` when strict dependency checks are needed.
 7. Do not mutate GitHub state until issue selection, branch preparation, dependency checks, and worktree safety checks pass.
 
@@ -95,10 +96,16 @@ If a GitHub Project is configured, the resumable issue must have Project `Status
 If no resumable issue exists:
 
 1. Require a clean working tree before claiming anything. If `git status --porcelain` is not empty, print `<status>BLOCKED</status>` before changing GitHub state.
-2. If `Forced issue` is set, validate that issue against all Agent Queue rules. A forced issue must not bypass labels, Project Status, category, or blocker checks.
-3. If a GitHub Project is configured, prefer the configured Project item order. Select the first issue item that satisfies all fresh-work rules.
-4. If no GitHub Project is configured, or Project item order cannot be read but labels can be read, fall back to the oldest updated open issue with the canonical `ready-for-agent` role.
-5. If there is no eligible issue, print `<status>COMPLETE</status>`.
+2. If a GitHub Project is configured, repair safe stale delivery-status drift before selecting work:
+   - Prefer running `~/Code/GitHub/zainfathoni/agent-workflows/ralph/project-status-repair.sh --repo <repo> --project-owner <owner> --project-number <number>` when available.
+   - Otherwise inspect open issues with the canonical `ready-for-agent` role in the configured Project.
+   - If such an issue has no open linked PR, is not assigned, and has Project `Status` set to a non-canonical queue value such as `Ready` or `Backlog`, set its Project `Status` to `Todo`.
+   - Do not change `In Progress` issues, assigned issues, issues with open linked PRs, closed issues, or `Done` items during this repair step.
+   - Treat this as dashboard drift repair: the `ready-for-agent` label is the triage source of truth, and `Todo` is the fresh-work delivery state.
+3. If `Forced issue` is set, validate that issue against all Agent Queue rules. A forced issue must not bypass labels, Project Status, category, or blocker checks.
+4. If a GitHub Project is configured, prefer the configured Project item order. Select the first issue item that satisfies all fresh-work rules.
+5. If no GitHub Project is configured, or Project item order cannot be read but labels can be read, fall back to the oldest updated open issue with the canonical `ready-for-agent` role.
+6. If there is no eligible issue, print `<status>COMPLETE</status>`.
 
 Fresh-work rules:
 
