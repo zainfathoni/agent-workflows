@@ -117,7 +117,7 @@ else
   printf 'GitHub Project: not configured; labels-only fallback will be documented\n'
 fi
 printf 'Docs to write/update: docs/agents/issue-tracker.md, docs/agents/triage-labels.md, docs/agents/domain.md, docs/agents/ralph.md\n'
-printf 'Labels to ensure: bug, enhancement, needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix\n'
+printf 'Labels to ensure: bug, enhancement, needs-triage, ready-for-agent-triage, needs-info, ready-for-agent, ready-for-human, wontfix\n'
 printf 'Local entrypoints: %s\n' "$ENTRYPOINT_MODE"
 
 if [ "$YES" -ne 1 ]; then
@@ -202,6 +202,7 @@ ensure_label() {
 ensure_label bug d73a4a 'Something is broken'
 ensure_label enhancement a2eeef 'New feature or improvement'
 ensure_label needs-triage fbca04 'Maintainer needs to evaluate this issue'
+ensure_label ready-for-agent-triage fef2c0 'Generated planning output ready for an agent-assisted triage pass'
 ensure_label needs-info d876e3 'Waiting on reporter for more information'
 ensure_label ready-for-agent 0e8a16 'Fully specified and ready for an AFK agent'
 ensure_label ready-for-human 1d76db 'Requires human implementation or review'

@@ -11,7 +11,7 @@ If a `Runtime Overrides` section appears above this prompt, use those values ins
 - Triage state is represented by labels, not by Project `Status`.
 - Project `Status`, when configured, is delivery progress: `Todo`, `In Progress`, `Done`.
 - Stale/custom Project statuses such as `Ready` or `Backlog` are dashboard drift, not triage state. Repair safe drift to `Todo` instead of silently skipping `ready-for-agent` work.
-- Ralph is execution-only. Do not run `/to-prd`, `/to-issues`, or `/triage`.
+- Ralph is execution-only. Do not run `/prototype`, `/handoff`, `/to-prd`, `/to-issues`, or `/triage`.
 - Do not use local ticket mirrors, Beads, or repo-local backlog files for this workflow.
 
 Before selecting work, read these files if they exist:
@@ -36,6 +36,7 @@ Every issue you work on must have exactly one category label. Canonical category
 Every issue you work on must have exactly one triage-state label. Canonical triage-state roles are:
 
 - `needs-triage`
+- `ready-for-agent-triage`
 - `needs-info`
 - `ready-for-agent`
 - `ready-for-human`
@@ -43,7 +44,7 @@ Every issue you work on must have exactly one triage-state label. Canonical tria
 
 If `docs/agents/triage-labels.md` maps these roles to different tracker labels, use the mapped labels. Do not create duplicate labels with similar meaning.
 
-For this Agent Queue flow, a fresh issue must have the canonical `ready-for-agent` role. If a GitHub Project is configured, it must also have Project `Status: Todo`.
+For this Agent Queue flow, a fresh issue must have the canonical `ready-for-agent` role. `ready-for-agent-triage` is a planning/triage queue role and is not sufficient for Ralph execution unless `docs/agents/triage-labels.md` explicitly maps it to the same tracker label as `ready-for-agent`. If a GitHub Project is configured, it must also have Project `Status: Todo`.
 
 ## Single-Run Contract
 

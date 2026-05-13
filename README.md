@@ -15,11 +15,17 @@ Reusable personal agent workflow tooling for repositories that use globally inst
 
 Planning and triage are manual, maintainer-triggered steps:
 
+- `/prototype` answers unclear product, UI, state, or integration questions with throwaway spikes before work is committed to issues.
+- `/handoff` compacts a long planning, debugging, or prototyping session so a fresh agent can continue with context.
 - `/to-prd` creates PRD issues.
 - `/to-issues` creates vertical-slice implementation issues.
 - `/triage` evaluates readiness and applies triage labels.
 
 Ralph starts after triage. It only consumes issues already marked `ready-for-agent`. It also treats GitHub's issue dependency graph as the canonical blocker source: issues with open `blockedBy` dependencies are not eligible for execution.
+
+If upstream skills create issues with `ready-for-agent-triage`, treat that as a planning/triage queue label. It does not make an issue eligible for Ralph until the repository's triage labels map the issue to `ready-for-agent`.
+
+Reference: [Skills Changelog: /handoff, /prototype, /review and /writing](https://www.aihero.dev/skills/skills-changelog-handoff-prototype-review-and-writing).
 
 ## Onboard A Repository
 

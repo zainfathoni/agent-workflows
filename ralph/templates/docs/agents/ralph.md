@@ -15,7 +15,7 @@ Ralph is the execution-only Agent Queue runner for this repository.
 
 Ralph consumes only issues that have already been triaged to the canonical `ready-for-agent` role.
 
-Ralph must not run `/to-prd`, `/to-issues`, or `/triage` automatically. Planning and triage remain maintainer-triggered.
+Ralph must not run `/prototype`, `/handoff`, `/to-prd`, `/to-issues`, or `/triage` automatically. Planning, prototyping, handoff, and triage remain maintainer-triggered.
 
 Fresh work must satisfy all of these rules:
 
@@ -51,7 +51,7 @@ Maintainers can reconcile markdown blocker notes into real GitHub dependency edg
 ~/Code/GitHub/zainfathoni/agent-workflows/ralph/github-blockers.sh sync --repo {{REPO}} --state all
 ```
 
-## Handoff
+## PR Handoff
 
 When implementation is complete, Ralph should open or update a PR and include `Closes #<issue-number>` in the PR body.
 

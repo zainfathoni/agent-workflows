@@ -6,6 +6,15 @@ Reusable personal skills that should be available across projects.
 
 - `fizzy` - manage Fizzy boards, cards, steps, comments, reactions, and pins. Card descriptions must be authored as HTML and card relationships must be linked.
 
+Use globally installed upstream planning skills alongside these shared skills:
+
+- `handoff` - compact a long session into a handoff document before switching agents or tasks.
+- `prototype` - build throwaway UI or business-logic spikes before turning decisions into PRDs or issues.
+
+Do not treat prototype code as production code unless a human explicitly promotes it into an implementation task.
+
+Reference: [Skills Changelog: /handoff, /prototype, /review and /writing](https://www.aihero.dev/skills/skills-changelog-handoff-prototype-review-and-writing).
+
 ## Install
 
 Install or update all shared skills by symlinking them into the global skills directory:
