@@ -66,10 +66,10 @@ Emit a checkpoint message with two parts:
 
 ```
 Quiz will cover (1 question per concept = 5 questions):
-  1. How `isDirty` is derived (Phase 1, beat 1)
-  2. Why discard forks on `isEmbedded` (Phase 1, beat 2)
-  3. What App Bridge handles that Polaris can't (Phase 1, beat 3)
-  4. The trade-off vs the rejected "always show Polaris modal" alternative (Phase 2)
+  1. What the button delegates to (Phase 1, beat 1)
+  2. Why validation runs before saving (Phase 1, beat 2)
+  3. What the shared action centralizes (Phase 1, beat 3)
+  4. The trade-off vs the rejected "validate in every component" alternative (Phase 2)
   5. The constraint in this codebase that decided the choice (Phase 2)
 ```
 
@@ -95,7 +95,7 @@ Two ways to point at code. Pick based on where the explanation will live.
 
 ### Default — local refs (live conversation)
 
-Format: `path/to/file.ext:line` rendered as a markdown link, e.g. `[polaris_form.jsx:218](app/javascript/components/components/common/polaris_form.jsx:218)`.
+Format: `path/to/file.ext:line` rendered as a markdown link, e.g. `[submit.ts:10](src/actions/submit.ts:10)`.
 
 - Clickable in Claude Code; opens directly in the user's editor.
 - Fast, offline, no network round-trip.
@@ -103,7 +103,7 @@ Format: `path/to/file.ext:line` rendered as a markdown link, e.g. `[polaris_form
 
 ### Opt-in — GitHub permalinks (shareable artifacts)
 
-Switch to permalinks when the user signals the explanation will outlive the working tree: phrases like "for the PR", "for the Fizzy card", "for sharing", "send this to the team", or when writing into a doc/comment that will be read later.
+Switch to permalinks when the user signals the explanation will outlive the working tree: phrases like "for the PR", "for sharing", "send this to the team", or when writing into a doc/comment that will be read later.
 
 Format: `https://github.com/<owner>/<repo>/blob/<sha>/<path>#L<line>` (or `#L<start>-L<end>` for a range).
 

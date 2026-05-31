@@ -118,12 +118,12 @@ After creating the squash guide, perform these steps:
    git branch backup/{original-branch-name}-before-rebase-{rebase-identifier}
    ```
 
-   - `{original-branch-name}`: The current branch name (e.g., `bugfix/sc-61358/booking-quantity-mismatch`)
+   - `{original-branch-name}`: The current branch name (e.g., `feature/short-name`)
    - `{rebase-identifier}`: Matches the squash guide filename (e.g., `2026-01-08-1`)
 
    Example:
    ```bash
-   git branch backup/bugfix/sc-61358/booking-quantity-mismatch-before-rebase-2026-01-08-1
+   git branch backup/feature/short-name-before-rebase-2026-01-08-1
    ```
 
 2. **If the goal is one squashed commit for the entire branch**, automate the interactive rebase with `sed`:
