@@ -5,6 +5,8 @@ Reusable personal skills that should be available across projects.
 ## Workflow Skills
 
 - `fizzy` - manage Fizzy boards, cards, steps, comments, reactions, and pins. Card descriptions must be authored as HTML and card relationships must be linked.
+- `squash-commits` - analyze branch commits and prepare a rebase guide for squashing related work into descriptive commits.
+- `explain-and-quiz` - explain a topic or PR with codebase references, alternatives, and trade-offs, then quiz the user to verify understanding.
 
 Use globally installed upstream planning skills alongside these shared skills:
 
@@ -31,30 +33,26 @@ AGENT_SKILLS_DIR=~/.claude/skills ~/Code/GitHub/zainfathoni/agent-workflows/skil
 
 The installer refuses to overwrite a real directory or file. If a target path already exists as a symlink, it is replaced.
 
-## Review Skill Families
+## Review Skills
 
-### Private Review Skills
+All review skills default to a current-user **PENDING** review and never submit, publish, publicly reply, resolve, or delete review content without explicit instruction.
 
-Use these when review comments or draft review notes should stay private until explicit submission:
+### Source-aware review skills
 
-- `private-review` - create a pending private review.
-- `private-address-review` - address private review comments while keeping replies pending/private.
-- `private-verify-review` - verify whether private review comments were addressed without publishing anything.
-- `private-clear-review` - delete current-user pending review artifacts only after explicit instruction.
+These handle review comments regardless of source — current-user pending drafts *or* teammate-visible threads — and apply source-specific safety internally:
 
-### Team Review Skills
+- `self-review` - create or update a current-user PENDING review with inline comments.
+- `review-address` - address review comments end-to-end (verify, fix, optionally reply), for pending drafts or teammate threads.
+- `review-verify` - verify whether review comments were addressed before replying, resolving, clearing, or submitting.
+- `review-clear` - delete current-user pending review artifacts only after explicit instruction.
 
-Use these for colleague-facing review work where replies may become visible when explicitly requested:
+### Teammate-facing review skills
 
-- `team-review` - review a teammate's PR and prepare review feedback.
-- `team-address-review` - address colleague review comments with focused fixes.
-- `team-verify-review` - verify whether colleague review comments were addressed.
-- `team-resolve-review` - resolve verified colleague-facing review threads.
+Use these for colleague-facing review work where feedback may become visible when explicitly requested:
 
-## Private vs Team
+- `team-review` - review a teammate's PR; draft findings as a PENDING review first, submit only when asked.
+- `team-review-resolve` - resolve verified teammate-visible review threads.
 
-Pick the private family when the key requirement is: "do not publish or submit pending review content without explicit instruction."
+## Pending-first contract
 
-Pick the team family when the key requirement is: "prepare or manage feedback intended for teammates."
-
-Do not mix private pending-review cleanup with team-visible thread resolution in the same step.
+Every skill above creates or updates a current-user PENDING review by default and treats publication as an explicit, opt-in step. Do not mix current-user pending-review cleanup (`review-clear`) with teammate-visible thread resolution (`team-review-resolve`) in the same step.
