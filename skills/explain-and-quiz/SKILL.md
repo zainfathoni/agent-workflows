@@ -129,8 +129,12 @@ The model defaults to placing the correct/recommended option first. Counter it w
 
 1. **Hard rule:** the correct answer for Q1 must NOT be at position A. Pick B, C, or D.
 2. **Spread rule:** across the full question set, correct answers must occupy at least 2 distinct positions. With 3+ questions, at least 3 distinct positions.
-3. **Private self-check:** before emitting the tool call, internally verify the correct-answer index for each question (e.g., `Q1=C, Q2=A, Q3=D`). If rules 1 or 2 fail, swap option ordering and recheck. Do not call the tool until the check passes.
-4. **Do not reveal the answer key:** never include the self-check, correct-answer indexes, or statements like "Q1=C" in the user-visible response before or during the quiz. The user should see only the quiz questions and options.
+3. **Private self-check (NEVER printed):** before emitting the tool call, verify the correct-answer index for each question *in your own reasoning only* — e.g. `Q1=C, Q2=A, Q3=D`, which is an internal note and must never appear in a message to the user. If rules 1 or 2 fail, swap option ordering and recheck. Do not call the tool until the check passes.
+4. **Do not leak the answer key — two forbidden failure modes:**
+   - **The position map.** Never print the self-check, correct-answer indexes, or phrasing like "Q1=C" / "correct answer placed at C" in any message *before or during* the quiz — not even as a "transparency" note. If you reference the check at all, say only "self-check passed". (Real leak: a quiz announced the position map before each round and handed over the full key.)
+   - **The example-string collision.** When giving a format hint for inline/fallback answering, use a neutral placeholder such as `1?, 2?, 3?, 4?` and verify its letters do NOT coincide with the real key. (Real leak: an "e.g. 1C 2D 3B 4A" hint matched 3 of 4 answers.)
+
+   Root principle for both: anything visible before the user answers must not encode which option is correct — not its text, not its letter, not its position. The user sees only questions and options until they have answered.
 5. **No tells:** keep correct options the same length and specificity as distractors — never the longest or most-qualified option by default.
 
 ## See also
