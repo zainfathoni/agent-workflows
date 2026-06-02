@@ -1,6 +1,6 @@
 ---
 id: "002"
-title: Document Tycho Amp Harness Limitation
+title: Record Temporary Tycho Amp Shim
 status: accepted
 date: 2026-06-02
 ---
@@ -13,15 +13,17 @@ Amp exposes a different non-interactive automation interface. Its one-shot execu
 
 Because of that command-line mismatch, Tycho cannot currently run Amp by setting a custom harness `execution_command` directly to `amp`.
 
+This decision is deliberately scoped to a temporary local workaround for Tycho and Amp. It is not a general third-party harness strategy for Agent Workflows, and it does not make Amp a first-class Ralph runner.
+
 ## Decision
 
-When using Amp from Tycho, document the integration as a compatibility shim rather than a native Tycho harness.
+When using Amp from Tycho, use a small local shim rather than treating Amp as a native Tycho harness.
 
 The recommended local configuration is:
 
 1. Create an executable shim that accepts Tycho's Claude-style argv, ignores Claude-only flags, extracts the final prompt, and invokes Amp with `amp --execute "$prompt" --stream-json`.
 2. Configure Tycho with `adapter: claude` and point `execution_command` at the shim.
-3. Treat the setup as one-shot execution support only.
+3. Treat the setup as temporary one-shot execution support only.
 
 Example shim:
 
@@ -80,13 +82,13 @@ projects:
 
 ### Positive
 
-- Tycho can invoke Amp for one-shot agent runs without waiting for upstream Tycho adapter support.
-- The workaround keeps Tycho configuration explicit and reversible.
+- Tycho can invoke Amp for one-shot agent runs while upstream support is absent.
+- The workaround stays explicit, local, and easy to remove.
 - The shim isolates Amp-specific command translation in one local file.
 
 ### Negative
 
-- The integration is not native Amp support.
+- The integration is not native Amp support and should not be promoted as reusable Agent Workflows infrastructure.
 - Claude-specific Tycho flags must be translated or dropped by the shim.
 - Tycho session ids do not map to Amp threads. Amp resumes conversations through `amp threads continue`, so this workaround should not be treated as native resume support.
 - The shim may need updates if Tycho changes the Claude adapter argv contract or Amp changes its automation flags.
