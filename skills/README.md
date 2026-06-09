@@ -7,6 +7,7 @@ Reusable personal skills that should be available across projects.
 - `fizzy` - manage Fizzy boards, cards, steps, comments, reactions, and pins. Card descriptions must be authored as HTML and card relationships must be linked.
 - `squash-commits` - analyze branch commits and prepare a rebase guide for squashing related work into descriptive commits.
 - `explain-and-quiz` - explain a topic or PR with codebase references, alternatives, and trade-offs, then quiz the user to verify understanding.
+- `pr-e2e-evidence` - collect repo-agnostic PR QA evidence: E2E results, browser verification notes, report screenshots, before/after screenshots, and PR description updates.
 
 Use globally installed upstream planning skills alongside these shared skills:
 
