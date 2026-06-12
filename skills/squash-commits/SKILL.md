@@ -154,4 +154,32 @@ After creating the squash guide, perform these steps:
 
    Using `--force-with-lease` instead of `--force` ensures you don't accidentally overwrite commits pushed by others.
 
+5. **Commit the rebase guide after the squash succeeds**
+
+   After the rebase, amend, and push succeed, commit the generated guide file so
+   the notes repository does not remain dirty. The guide may live in a different
+   repository from the code branch, especially when project docs are symlinked
+   into the codebase from a notes repository.
+
+   Detect the repository that owns the guide file:
+
+   ```bash
+   guide_path="docs/rebases/{ticket-id}/{rebase-identifier}.md"
+   guide_abs="$(cd "$(dirname "$guide_path")" && pwd -P)/$(basename "$guide_path")"
+   guide_repo="$(git -C "$(dirname "$guide_abs")" rev-parse --show-toplevel)"
+   git -C "$guide_repo" status --short -- "$guide_abs"
+   ```
+
+   Then stage, commit, and push only the generated guide file from that owning
+   repository:
+
+   ```bash
+   git -C "$guide_repo" add "$guide_abs"
+   git -C "$guide_repo" commit -m "Docs: add {ticket-id} rebase guide"
+   git -C "$guide_repo" push
+   ```
+
+   If multiple guide files were created for the same squash session, stage only
+   those files. Do not include unrelated notes, reports, or working-tree changes.
+
 If the guide contains multiple groups, do not use the single-command `sed` shortcut above. Follow the generated rebase plan manually so each contiguous group is squashed without reordering commits.
