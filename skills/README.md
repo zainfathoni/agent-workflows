@@ -8,6 +8,7 @@ Reusable personal skills that should be available across projects.
 - `squash-commits` - analyze branch commits and prepare a rebase guide for squashing related work into descriptive commits.
 - `explain-and-quiz` - explain a topic or PR with codebase references, alternatives, and trade-offs, then quiz the user to verify understanding.
 - `pr-e2e-evidence` - collect repo-agnostic PR QA evidence: E2E results, browser verification notes, report screenshots, before/after screenshots, and PR description updates.
+- `teach` - stateful, multi-session teaching workspace (mission, lessons, reference docs, learning records). Vendored from Matt Pocock's AI Hero ([learn-anything-with-my-teach-skill](https://www.aihero.dev/learn-anything-with-my-teach-skill)) and tracked here so local modifications are version-controlled. Local change: codebase lessons link source references via `vscode://file/<path>:<line>` deep links.
 
 Use globally installed upstream planning skills alongside these shared skills:
 
