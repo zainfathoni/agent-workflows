@@ -49,6 +49,8 @@ A lesson is the main thing you produce — the unit in which knowledge and skill
 
 A lesson should be **beautiful** — clean, readable typography and layout — since the user will return to these later to review. Think Tufte.
 
+Beautiful also means **accessible**: keep text/background contrast at WCAG AA or better (≥4.5:1 for body text). The most common trap is a dark callout box (e.g. a highlighted "key takeaway" panel with light text) that contains inline `<code>` styled by a global rule giving it a *light* background and no explicit color — the code then inherits the panel's light text and becomes near-invisible (light-on-light). Whenever a box overrides the default text color, add a matching override for any nested `<code>`/`<pre>` so they stay legible inside it. Add a viewport meta tag (`width=device-width`) so lessons read well on mobile.
+
 The lesson should be short, and completable very quickly. Learners' working memory is very small, and we need to stay within it. But each lesson should give the user a single tangible win that they can build on. It should be directly tied to the mission, and should be in the user's zone of proximal development.
 
 If possible, open the lesson file for the user by running a CLI command.
