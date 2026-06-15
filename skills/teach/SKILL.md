@@ -47,6 +47,8 @@ Fluency can give the user an illusory sense of mastery, but storage strength is 
 
 A lesson is the main thing you produce — the unit in which knowledge and skills reach the user. Each lesson is one self-contained HTML file, saved to `./lessons/` and titled `0001-<dash-case-name>.html` where the number increments each time.
 
+**Start every lesson from [lesson-template.html](./lesson-template.html)** — the canonical, accessible styling lives there (CSS variables, the dark `.defense` callout with its required `.defense code` contrast override, the `.vsc`/`.gh` source-reference chips, the mobile viewport meta). Copy it into the workspace's `lessons/` dir and replace the placeholder content; do not re-derive the styles by imitating older lessons (that is how styling bugs propagate). Because lessons are self-contained, editing the template does not update already-shipped lessons — fix those in place.
+
 A lesson should be **beautiful** — clean, readable typography and layout — since the user will return to these later to review. Think Tufte.
 
 Beautiful also means **accessible**: keep text/background contrast at WCAG AA or better (≥4.5:1 for body text). The most common trap is a dark callout box (e.g. a highlighted "key takeaway" panel with light text) that contains inline `<code>` styled by a global rule giving it a *light* background and no explicit color — the code then inherits the panel's light text and becomes near-invisible (light-on-light). Whenever a box overrides the default text color, add a matching override for any nested `<code>`/`<pre>` so they stay legible inside it. Add a viewport meta tag (`width=device-width`) so lessons read well on mobile.

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!--
+  CANONICAL LESSON TEMPLATE for the /teach skill.
+  Copy this file to <workspace>/lessons/000N-<dash-case-name>.html and replace
+  the placeholder content. Keep the <style> block intact — it is the single
+  source of truth for lesson styling, and it is deliberately ACCESSIBLE:
+
+  - Every dark container (.defense) re-asserts the color of nested <code>, so
+    inline code never ends up light-on-light (the classic cascade-gap bug).
+  - <meta viewport> is present so lessons read well on mobile.
+  - Body/background contrast is WCAG AA or better.
+
+  Lessons are INTENTIONALLY self-contained (inline CSS, no external assets) so
+  they work over file://, Tailscale, and offline. That means editing this
+  template does NOT update already-shipped lessons — fix those in place.
+
+  Source references MUST carry both a VS Code chip (.vsc, local) and a GitHub
+  permalink chip (.gh, pinned to the reviewed commit SHA) — see .srcline below.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson N — TITLE</title>
+<style>
+  :root { --ink:#1a1a1a; --muted:#6b6b6b; --rule:#e0ddd6; --accent:#2e5c7a;
+          --add:#2e7d32; --del:#b23b3b; --warn:#9a7d1f; }
+  body { font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+         max-width:42rem; margin:3rem auto; padding:0 1.5rem; color:var(--ink);
+         line-height:1.58; background:#fbfaf7; }
+  h1 { font-size:1.9rem; line-height:1.15; margin-bottom:.2rem; }
+  .sub { color:var(--muted); font-style:italic; margin-top:0; }
+  h2 { font-size:1.15rem; margin-top:2.2rem; border-bottom:1px solid var(--rule);
+       padding-bottom:.25rem; }
+  h3 { font-size:1rem; margin-top:1.5rem; color:var(--accent); }
+  code { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.84em;
+         background:#eef1f4; padding:.1em .3em; border-radius:3px; }
+  pre { background:#f4f6f8; border-left:3px solid var(--accent); padding:.9rem 1rem;
+        overflow-x:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.79rem;
+        line-height:1.45; }
+  blockquote { border-left:3px solid var(--warn); margin:1.2rem 0; padding:.3rem 1rem;
+               color:#3a3a3a; background:#faf6ea; }
+  table { border-collapse:collapse; width:100%; font-size:.82rem; margin:1rem 0; }
+  th,td { border:1px solid var(--rule); padding:.45rem .55rem; text-align:left; vertical-align:top; }
+  th { background:#eef1f4; }
+  .defense { background:#1a1a1a; color:#f4f1e8; padding:1rem 1.2rem; border-radius:6px;
+             margin:1.4rem 0; }
+  .defense b { color:#e8c98a; }
+  /* REQUIRED: re-assert code color inside the dark box so it isn't light-on-light */
+  .defense code { background:#3a3f44; color:#f4f1e8; }
+  a { color:var(--accent); }
+  .add { color:var(--add); } .del { color:var(--del); }
+  .foot { margin-top:2.5rem; border-top:1px solid var(--rule); padding-top:1rem;
+          font-size:.85rem; color:var(--muted); }
+  .ask { background:#eef4f7; border:1px solid #cfe0e8; border-radius:6px;
+         padding:.7rem 1rem; font-size:.9rem; }
+  /* Source-reference chips: .vsc = local VS Code, .gh = portable GitHub permalink */
+  .vsc { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.72rem;
+         text-decoration:none; background:#eef1f4; border:1px solid #cfe0e8;
+         border-radius:4px; padding:.08em .45em; white-space:nowrap; color:var(--accent); }
+  .vsc:hover { background:#dbe7ef; }
+  .gh { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.7rem;
+        text-decoration:none; background:#1a1a1a; color:#f4f1e8;
+        border-radius:4px; padding:.08em .4em; white-space:nowrap; }
+  .gh:hover { background:#333; }
+  .srcline { margin:.35rem 0 0; font-size:.78rem; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<h1>LESSON HEADLINE — the one idea</h1>
+<p class="sub">Lesson N · PR #NNNNN · one-line framing tied to the mission</p>
+
+<p>Open with the concrete problem this lesson resolves. Keep it short — one win.</p>
+
+<h2>A section</h2>
+<pre><span class="del">- removed line</span>
+<span class="add">+ added line</span></pre>
+<!-- Source chips: BOTH links, same line. Re-grep the line number at the SHA first. -->
+<p class="srcline">Source (local · remote):
+  <a class="vsc" href="vscode://file/ABS/PATH/file.ext:NN">file.ext:NN</a>
+  <a class="gh" href="https://github.com/OWNER/REPO/blob/COMMIT_SHA/repo/rel/path.ext#LNN">GitHub↗</a></p>
+
+<blockquote>A reviewer's likely objection, and the crisp rebuttal.</blockquote>
+
+<div class="defense">
+<b>Cold-recall defense (one breath):</b><br>
+The single thing to be able to say in review without hesitating. Inline
+<code>code</code> here stays legible because of the <code>.defense code</code> rule.
+</div>
+
+<h2>Read next</h2>
+<ul>
+  <li><a href="000M-prev.html">← previous lesson</a></li>
+  <li><a href="../reference/architecture-map.html">Architecture map</a></li>
+  <li><a href="000P-next.html">next lesson →</a></li>
+</ul>
+
+<h2>Primary source</h2>
+<p>The single highest-quality external source for this topic, with a ~N-min read estimate.</p>
+
+<p class="ask">💬 I'm your teacher for this — ask me followups any time.</p>
+
+<p class="foot">Lesson N of M · workspace teach/pr-NNNNN · mission: …</p>
+</body>
+</html>
+</content>
