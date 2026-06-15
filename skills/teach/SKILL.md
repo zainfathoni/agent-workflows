@@ -61,12 +61,15 @@ Each lesson should contain a reminder to ask followup questions to the agent. Th
 
 ### Linking to source code
 
-When the topic is a codebase (e.g. understanding a PR or a module), every reference to a real source file in a lesson or reference document should be a clickable **VS Code deep link** so the user can jump straight to the code:
+When the topic is a codebase (e.g. understanding a PR or a module), every reference to a real source file in a lesson or reference document should carry **two** clickable links so the user can jump to the code from any device:
 
-- Format: `vscode://file/<absolute-path>:<line>` (optionally `:<line>:<col>`). Note the **single** slash after `file` — the absolute path's own leading `/` supplies the separator. `vscode://file//Users/...` is wrong.
-- Always re-derive line numbers against the current branch (grep for the symbol) before linking — line numbers drift as the branch moves; never trust a diff's line hints.
-- Render them as small monospace chips with a short caption line under the relevant code block, e.g. a `.vsc` anchor style + a `.srcline` caption. Keep the label as `filename:line` so it reads as a citation.
+- **VS Code deep link (local):** `vscode://file/<absolute-path>:<line>` (optionally `:<line>:<col>`). Note the **single** slash after `file` — the absolute path's own leading `/` supplies the separator. `vscode://file//Users/...` is wrong. Works only on the machine that holds the repo.
+- **GitHub permalink (portable):** `https://github.com/<owner>/<repo>/blob/<commit-SHA>/<repo-rel-path>#L<line>`. Pin to the **reviewed commit SHA** (the PR head), never a branch name — a branch link drifts as new commits land and the line numbers stop matching. This is the link that works when the lessons are viewed from a phone/tablet over Tailscale or shared with a colleague.
+- Always re-derive line numbers against that exact commit (grep the working tree at that SHA) before linking — line numbers drift; never trust a diff's line hints. The VS Code and GitHub links must point at the same line.
+- Render them as small monospace chips with a short caption line under the relevant code block: a `.vsc` chip (`filename:line`) followed by a `.gh` chip (`GitHub↗`), under a `.srcline` caption.
 - On first click the browser may prompt to open VS Code; that's expected.
+
+When lessons are served to other devices (e.g. via `tailscale serve` over the tailnet), remember the VS Code chips will target the *viewing* device's filesystem and won't navigate — the GitHub permalink is the one that works remotely. This is why both are required.
 
 ## The Mission
 
