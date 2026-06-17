@@ -9,7 +9,25 @@ The user has asked you to teach them something. This is a stateful request - the
 
 ## Teaching Workspace
 
-Treat the current directory as a teaching workspace. The state of their learning is captured in this directory in several files:
+Treat the current directory as a teaching workspace. When a topic has a single
+canonical source (a ticket, a PR, a support case), give it its own subdirectory
+named `<source>-<id>`, where the **prefix is always derived from where the
+original information is hosted** — never a generic word like `issue-`. Examples:
+
+| Source of the original information | Prefix | Example dir |
+| ---------------------------------- | ------ | ----------- |
+| Trello card                        | `trello-` | `trello-HSwwTrRE/` |
+| Zendesk ticket                     | `zendesk-` | `zendesk-93087/` |
+| GitHub pull request                | `pr-`   | `pr-11826/` |
+| GitHub issue                       | `gh-`   | `gh-4821/` |
+| Shortcut story                     | `sc-`   | `sc-46543/` |
+
+If a topic spans several sources, pick the prefix of the *system of record* (the
+one you would cite first) and note the others in `MISSION.md`. If a topic has no
+hosted source at all (e.g. "teach me yoga"), use a plain dash-case slug with no
+prefix.
+
+The state of their learning is captured in this directory in several files:
 
 - `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
