@@ -75,6 +75,24 @@ When the topic is a codebase (e.g. understanding a PR or a module), every refere
 
 When lessons are served to other devices (e.g. via `tailscale serve` over the tailnet), remember the VS Code chips will target the *viewing* device's filesystem and won't navigate — the GitHub permalink is the one that works remotely. This is why both are required.
 
+### Serving lessons over Tailscale
+
+To read lessons on a phone/tablet/other machine, serve the workspace over the tailnet with [serve-lessons.sh](./serve-lessons.sh):
+
+```bash
+~/.claude/skills/teach/serve-lessons.sh [TEACH_DIR] [PORT] [URL_PATH]
+# defaults: TEACH_DIR=$PWD, PORT=7374, URL_PATH=/teach
+```
+
+It does two things, both idempotent so it's safe to re-run:
+
+1. **Local static server** — `python3 -m http.server <PORT> --bind 127.0.0.1 --directory <TEACH_DIR>`, started only if nothing already holds the port. Bound to localhost so Tailscale is the sole access path. This process is **ephemeral** (dies on reboot/logout) — re-run the script to bring it back.
+2. **Tailnet proxy** — `tailscale serve --bg --set-path <URL_PATH> http://127.0.0.1:<PORT>`. This mapping is **persistent** (survives reboots) and **tailnet-only** — reachable from your logged-in devices, not the public internet.
+
+Prerequisites: Tailscale installed and logged into the tailnet, with HTTPS/MagicDNS enabled (so `serve` can mint the cert). The resulting URL is `https://<this-host>.<tailnet>.ts.net<URL_PATH>/<lesson-path>`.
+
+To stop sharing, remove the mapping with `tailscale serve --set-path <URL_PATH> off` and kill the `http.server` process.
+
 ## The Mission
 
 Every lesson should be tied into the mission - the reason that the user is interested in learning about the topic.
