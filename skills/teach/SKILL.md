@@ -109,6 +109,17 @@ It does two things, both idempotent so it's safe to re-run:
 
 Prerequisites: Tailscale installed and logged into the tailnet, with HTTPS/MagicDNS enabled (so `serve` can mint the cert). The resulting URL is `https://<this-host>.<tailnet>.ts.net<URL_PATH>/<lesson-path>`.
 
+Before giving lesson links, verify the active server is serving the intended teach
+root, not a stale single-topic workspace:
+
+- Run `tailscale serve status` and confirm `<URL_PATH>` maps to the expected local
+  port.
+- Check at least one lesson locally with `curl -I
+  http://127.0.0.1:<PORT>/<topic>/lessons/<lesson>.html`.
+- If a Tailscale hostname is known, check the tailnet URL with `curl -I` too.
+- If the port is occupied by an old `http.server` rooted at the wrong directory,
+  restart it against the shared teach root before sharing links.
+
 To stop sharing, remove the mapping with `tailscale serve --set-path <URL_PATH> off` and kill the `http.server` process.
 
 ## The Mission
@@ -151,6 +162,27 @@ For skill acquisition, difficulty is the tool. Effortful retrieval is what build
 Each of these should be based on a **feedback loop**, where the user receives feedback on their performance. This feedback loop should be as tight as possible, giving feedback immediately - and ideally automatically.
 
 For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
+
+### Tycho inquiry feedback loops
+
+When running in Tycho and asking the user to answer a quiz or choose a next teaching
+direction, prefer the structured final-response `inquiry` object over markdown-only
+questions. Do not use `request_user_input` as the primary path unless that tool is
+available in the current mode; in Tycho Default mode it may be unavailable even
+though final-response inquiries work.
+
+For multiple-choice quizzes, create one inquiry field per question:
+
+- Use `input_type: "select"` for each multiple-choice question.
+- Put the choices in that field's `options` array.
+- Use stable keys such as `q1_presence_gate` or `q2_destroyed_booking`.
+- Do not flatten several questions into one free-text field.
+- Use `input_type: "text"` only for free-recall prompts where the user should
+  explain a mechanism in their own words.
+
+After the user answers, grade each field explicitly, give corrective feedback for
+misses, and record the result in `NOTES.md`. Write a learning record only when the
+user demonstrates the concept, not merely because it was covered.
 
 ## Acquiring Wisdom
 
