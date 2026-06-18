@@ -73,7 +73,7 @@ Beautiful also means **accessible**: keep text/background contrast at WCAG AA or
 
 The lesson should be short, and completable very quickly. Learners' working memory is very small, and we need to stay within it. But each lesson should give the user a single tangible win that they can build on. It should be directly tied to the mission, and should be in the user's zone of proximal development.
 
-If possible, open the lesson file for the user by running a CLI command.
+If possible, open the lesson file for the user by running a CLI command. **Also surface the lesson's tailnet URL** whenever the workspace is (or can be) served over Tailscale — `open` only helps on the host machine, but the user often reads lessons from a phone or tablet. If a `tailscale serve` mapping already covers the workspace, hand over the full `https://<host>.<tailnet>.ts.net<URL_PATH>/<lesson-path>` URL alongside the local `open`; otherwise offer to start it with [serve-lessons.sh](./serve-lessons.sh) (see "Serving lessons over Tailscale" below). Do not stop at a local `open` and assume the user is at the host.
 
 Each lesson should link via HTML anchors to other lessons and reference documents.
 
