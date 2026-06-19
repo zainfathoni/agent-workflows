@@ -132,3 +132,13 @@ Install or update upstream-tracked Matt Pocock skills first, then install this r
 `skills/update-upstream.sh` installs an explicit allowlist of upstream-tracked skills and intentionally excludes local-owned `teach`, so pulling this repo does not depend on a human remembering which upstream skills are safe to update.
 
 By default this symlinks shared skills into `~/.agents/skills`. Set `AGENT_SKILLS_DIR` to install somewhere else.
+
+## Script Safety
+
+This repo uses [destructive_command_guard](https://github.com/Dicklesworthstone/destructive_command_guard) scan config in `.dcg/hooks.toml` and CI in `.github/workflows/dcg-scan.yml` to catch destructive commands added to shell scripts and workflows.
+
+For local checks, install `dcg` and run:
+
+```bash
+dcg scan --paths skills/ .github/workflows/ --fail-on error
+```

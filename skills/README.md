@@ -59,6 +59,8 @@ AGENT_SKILLS_DIR=~/.claude/skills ~/Code/GitHub/zainfathoni/agent-workflows/skil
 
 The installer refuses to overwrite a real directory or file. If a target path already exists as a symlink, it is replaced.
 
+Shell scripts under `skills/` are covered by destructive-command scanning. If you add or change a script, run `dcg scan --paths skills/ --fail-on error` when `dcg` is installed; CI also scans scripts and workflows.
+
 ## Review Skills
 
 All review skills default to a current-user **PENDING** review and never submit, publish, publicly reply, resolve, or delete review content without explicit instruction.

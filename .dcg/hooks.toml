@@ -1,0 +1,15 @@
+[scan]
+fail_on = "error"
+format = "pretty"
+redact = "quoted"
+truncate = 200
+
+[scan.paths]
+include = [
+  "skills/**/*.sh",
+  ".github/workflows/**",
+]
+exclude = [
+  "node_modules/**",
+  "vendor/**",
+]

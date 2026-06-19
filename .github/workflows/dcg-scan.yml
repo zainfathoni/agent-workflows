@@ -1,0 +1,19 @@
+name: DCG Scan
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Dicklesworthstone/destructive_command_guard/action@v0
+        with:
+          paths: skills/ .github/workflows/
+          fail-on: error
