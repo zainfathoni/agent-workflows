@@ -13,7 +13,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: Dicklesworthstone/destructive_command_guard/action@v0.5.7
-        with:
-          paths: skills/ .github/workflows/
-          fail-on: error
+      - name: Install dcg
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/Dicklesworthstone/destructive_command_guard/v0.5.7/install.sh \
+            | bash -s -- --version v0.5.7 --dest "$HOME/.local/bin" --no-configure --verify
+      - name: Scan scripts and workflows
+        run: "$HOME/.local/bin/dcg" scan --paths skills/ .github/workflows/ --fail-on error
