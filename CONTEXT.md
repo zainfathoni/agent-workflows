@@ -40,6 +40,18 @@ _Avoid_: Installed copy, checked-in runner
 A reusable skill stored in Agent Workflows and installed into the global agent skills directory by symlink.
 _Avoid_: Repo-local skill, copied skill
 
+**Upstream Skill**:
+A reusable skill owned by an external skill source, especially Matt Pocock's skills, and installed globally from that source rather than mirrored in Agent Workflows.
+_Avoid_: Shared skill, local fork
+
+**Local-Owned Skill**:
+A skill whose behavior is materially customized for Zain's workflows and whose source of truth is Agent Workflows.
+_Avoid_: Upstream skill, vendored copy
+
+**Upstream-Tracked Skill**:
+A skill that may be installed or updated from its upstream source because Agent Workflows does not own local behavior for it.
+_Avoid_: Local-owned skill, fork
+
 **Private Review**:
 A review workflow where pending review comments and replies must remain private unless the user explicitly submits or publishes them.
 _Avoid_: Team review, public review
@@ -57,6 +69,9 @@ _Avoid_: Private review
 - **Repo-Local Agent Docs** adapt global skills and **Ralph** to a specific repository.
 - **Local Symlinks** provide convenient entrypoints without committing shared runner copies into application repositories.
 - A **Shared Skill** may be installed globally by symlink, while project-specific skill behavior should remain in repo-local skills.
+- **Upstream Skills** are installed from their upstream source; only materially customized skills become **Local-Owned Skills** in Agent Workflows.
+- **Upstream-Tracked Skills** may accept upstream breaking changes, including renames and removal of deprecated skills.
+- The v1 upstream grilling stack (`grilling`, `domain-modeling`, and `grill-with-docs`) remains **Upstream-Tracked** unless Agent Workflows needs concrete customized behavior.
 - **Private Review** skills protect pending review artifacts.
 - **Team Review** skills manage colleague-visible review feedback and thread resolution.
 
@@ -65,4 +80,5 @@ _Avoid_: Private review
 - **Status** can mean triage state or delivery status. Use **Triage State** for labels and **Delivery Status** for GitHub Project `Status`.
 - **Ralph** is not a planning or triage mechanism. Planning and triage are manually triggered through skills.
 - **Repo-Local Agent Docs** are not a second source of truth for work. GitHub Issues remain the work source of truth.
+- **Shared Skill** does not mean every globally installed skill. Use **Upstream Skill** for skills owned elsewhere and **Local-Owned Skill** for customized skills maintained here.
 - **Private Review** and **Team Review** are intentionally separate. Do not use private pending-review cleanup rules to mutate team-visible threads.
