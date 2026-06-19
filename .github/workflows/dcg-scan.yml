@@ -13,7 +13,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: Dicklesworthstone/destructive_command_guard/action@v0
+      - uses: Dicklesworthstone/destructive_command_guard/action@v0.5.7
         with:
           paths: skills/ .github/workflows/
           fail-on: error
