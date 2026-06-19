@@ -19,7 +19,7 @@ Daily notes live under:
 /Users/zain/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-notes/log/daily/
 ```
 
-Logging is not only a daily transcript. Always preserve the durable outcome where a future agent or the user would naturally look for it.
+Logging is not only a daily transcript. Daily notes own the session trail; topical/project notes own durable reusable knowledge where a future agent or the user would naturally look for it.
 
 ## Workflow
 
@@ -30,7 +30,7 @@ Logging is not only a daily transcript. Always preserve the durable outcome wher
 2. Read each target note before editing it.
 3. Append or update the smallest relevant section instead of rewriting unrelated content.
 4. Use Obsidian wikilinks for existing notes, for example `[[mac/lid-and-suspend]]`.
-5. Include only durable information:
+5. Include the right level of detail for the note type:
    - problem or request
    - key findings
    - files changed
@@ -39,6 +39,14 @@ Logging is not only a daily transcript. Always preserve the durable outcome wher
 6. Avoid noisy transcripts, command dumps, and internal tool details unless the command/result is needed for future restoration.
 7. Cross-link the daily entry and topical note when it helps future navigation.
 8. Do not commit or push the notes. This vault path is iCloud-synced rather than git-tracked.
+
+## Separating daily and topical notes
+
+- Daily notes should own session-specific investigation history, drafts, Slack/Zendesk reply wording, timestamps, detailed source context, and one-off support or deployment narration.
+- Topical/project notes should own only durable reusable knowledge: stable implementation facts, decisions, operating rules, gotchas, restore details, and current system behavior.
+- Do not copy full daily-note sections into topical notes. If a topical note needs provenance, summarize the durable lesson and link back to the relevant daily section with an Obsidian wikilink.
+- Use embeds/transclusion sparingly; topical notes get noisy when they render many dated conversations.
+- If topical content starts reading like a transcript, PR/deployment log, or reply draft, keep that detail in the daily note and move only the durable takeaway into the topical note.
 
 ## Choosing non-periodic topical notes
 
