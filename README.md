@@ -137,7 +137,7 @@ By default this symlinks shared skills into `~/.agents/skills`. Set `AGENT_SKILL
 
 This repo uses [destructive_command_guard](https://github.com/Dicklesworthstone/destructive_command_guard) scan config in `.dcg/hooks.toml` and CI in `.github/workflows/dcg-scan.yml` to catch destructive commands added to shell scripts and workflows.
 
-For local checks, install `dcg` and run:
+For local checks, install `dcg` through machine configuration when possible (for example, the `nix-home` Home Manager setup tracked in [nix-home#3](https://github.com/zainfathoni/nix-home/issues/3)) and run:
 
 ```bash
 dcg scan --paths skills/ .github/workflows/ --fail-on error
