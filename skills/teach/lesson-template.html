@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <!--
-  CANONICAL LESSON TEMPLATE for the /teach skill.
-  Copy this file to <workspace>/lessons/000N-<dash-case-name>.html and replace
-  the placeholder content. Keep the <style> block intact — it is the single
-  source of truth for lesson styling, and it is deliberately ACCESSIBLE:
+  CANONICAL LESSON BASELINE for the /teach skill.
+  Use this file to seed a teaching workspace's first lesson and shared assets.
+  For multi-lesson workspaces, factor reusable styling and behavior into
+  <workspace>/assets/ instead of repeatedly copying them between lessons.
+  The baseline <style> block is deliberately ACCESSIBLE:
 
   - Every dark container (.defense) re-asserts the color of nested <code>, so
     inline code never ends up light-on-light (the classic cascade-gap bug).
   - <meta viewport> is present so lessons read well on mobile.
   - Body/background contrast is WCAG AA or better.
 
-  Lessons are INTENTIONALLY self-contained (inline CSS, no external assets) so
-  they work over file://, Tailscale, and offline. That means editing this
-  template does NOT update already-shipped lessons — fix those in place.
+  Lessons and assets should work over file://, Tailscale, and offline static
+  hosting without a build step. Editing this template does NOT update
+  already-shipped lessons or workspace assets — fix those in place.
 
   Source references MUST carry both a VS Code chip (.vsc, local) and a GitHub
   permalink chip (.gh, pinned to the reviewed commit SHA) — see .srcline below.

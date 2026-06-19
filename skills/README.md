@@ -9,9 +9,11 @@ Reusable personal skills that should be available across projects.
 - `squash-commits` - analyze branch commits and prepare a rebase guide for squashing related work into descriptive commits.
 - `explain-and-quiz` - explain a topic or PR with codebase references, alternatives, and trade-offs, then quiz the user to verify understanding.
 - `pr-e2e-evidence` - collect repo-agnostic PR QA evidence: E2E results, browser verification notes, report screenshots, before/after screenshots, and PR description updates.
-- `teach` - stateful, multi-session teaching workspace (mission, lessons, reference docs, learning records). Vendored from Matt Pocock's AI Hero ([learn-anything-with-my-teach-skill](https://www.aihero.dev/learn-anything-with-my-teach-skill)) and tracked here so local modifications are version-controlled. Local change: codebase lessons link source references via `vscode://file/<path>:<line>` deep links.
+- `teach` - stateful, multi-session teaching workspace (mission, lessons, reference docs, learning records, reusable workspace assets). Vendored from Matt Pocock's AI Hero ([learn-anything-with-my-teach-skill](https://www.aihero.dev/learn-anything-with-my-teach-skill)) and tracked here so local modifications are version-controlled. Local changes: codebase lessons link source references via `vscode://file/<path>:<line>` deep links and pinned GitHub permalinks; lessons can be served over Tailscale.
 
 `teach` is local-owned. Do not overwrite it with `npx skills add mattpocock/skills`; compare upstream changes in a separate grilling session and selectively port only the accepted parts.
+
+When comparing `teach` with upstream, treat upstream as input, not authority: adopt upstream changes only when they improve the teaching model without weakening the local delta. Preserve the local delta unless a grilling decision explicitly retires it: source-derived workspace directories, reusable workspace assets as the default architecture, static/offline/Tailscale asset portability, codebase source chips with both VS Code deep links and pinned GitHub permalinks, Tailscale serving, Tycho inquiry feedback loops, and the committed local templates/scripts under `skills/teach/`.
 
 Use globally installed upstream skills alongside these shared skills. Upstream-tracked skills are installed from Matt Pocock's skills and may accept upstream breaking changes, including renames and removal of deprecated skills.
 
@@ -34,6 +36,14 @@ Do not treat prototype code as production code unless a human explicitly promote
 Reference: [Skills Changelog v1](https://www.aihero.dev/skills/skills-changelog-v1-announcement).
 
 ## Install
+
+Install or update upstream-tracked Matt Pocock skills first:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/skills/update-upstream.sh
+```
+
+The upstream updater uses an explicit allowlist and intentionally excludes local-owned `teach`. Override the target agents with `UPSTREAM_SKILLS_AGENTS` if needed; the default is `*`.
 
 Install or update all shared skills by symlinking them into the global skills directory:
 

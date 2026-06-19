@@ -7,6 +7,20 @@ argument-hint: "What would you like to learn about?"
 
 The user has asked you to teach them something. This is a stateful request - they intend to learn the topic over multiple sessions.
 
+## Local-Owned Delta
+
+This `teach` skill is local-owned. When comparing it with Matt Pocock's upstream `teach`, preserve these local behaviors unless a grilling decision explicitly retires one:
+
+- source-derived workspace directory names for topics tied to hosted sources;
+- reusable `./assets/*` as the default lesson architecture;
+- static/offline/Tailscale portability for lesson assets, with no build step or network-only dependencies unless explicitly accepted;
+- codebase source references with both VS Code deep links and pinned GitHub permalinks;
+- Tailscale lesson serving guidance and `serve-lessons.sh`;
+- Tycho structured inquiry feedback loops;
+- committed local templates and scripts in this directory.
+
+Upstream changes are input, not authority. Adopt them only when they improve the teaching model without weakening this local-owned delta. If an upstream change conflicts with the delta, grill the trade-off and require explicit acceptance before modifying local `teach`.
+
 ## Teaching Workspace
 
 Treat the current directory as a teaching workspace. When a topic has a single
@@ -33,7 +47,8 @@ The state of their learning is captured in this directory in several files:
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
 - `RESOURCES.md`: A list of resources which can be explored to ground your teaching in contextual knowledge, or to acquire knowledge and wisdom. Use the format in [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
 - `./learning-records/*.md`: A directory of learning records, which capture what the user has learned. These are loosely equivalent to architectural decision records in software development - they capture non-obvious lessons and key insights that may need to be revised later, or drive future sessions. These should be used to calculate the zone of proximal development. They are titled `0001-<dash-case-name>.md`, where the number increments each time. Use the format in [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
-- `./lessons/*.html`: A directory of lessons. A **lesson** is a single, self-contained HTML output that teaches one tightly-scoped thing tied to the mission. This is the primary unit of teaching in this workspace.
+- `./lessons/*.html`: A directory of lessons. A **lesson** is a single HTML output that teaches one tightly-scoped thing tied to the mission and links to reusable workspace assets when appropriate. This is the primary unit of teaching in this workspace.
+- `./assets/*`: Reusable **components** shared across lessons. See [Assets](#assets).
 - `NOTES.md`: A scratchpad for you to jot down user preferences, or working notes.
 
 ## Philosophy
@@ -63,9 +78,9 @@ Fluency can give the user an illusory sense of mastery, but storage strength is 
 
 ## Lessons
 
-A lesson is the main thing you produce — the unit in which knowledge and skills reach the user. Each lesson is one self-contained HTML file, saved to `./lessons/` and titled `0001-<dash-case-name>.html` where the number increments each time.
+A lesson is the main thing you produce — the unit in which knowledge and skills reach the user. Each lesson is one HTML file, saved to `./lessons/` and titled `0001-<dash-case-name>.html` where the number increments each time. Lessons should reuse workspace assets by default rather than duplicating shared styles or interaction code.
 
-**Start every lesson from [lesson-template.html](./lesson-template.html)** — the canonical, accessible styling lives there (CSS variables, the dark `.defense` callout with its required `.defense code` contrast override, the `.vsc`/`.gh` source-reference chips, the mobile viewport meta). Copy it into the workspace's `lessons/` dir and replace the placeholder content; do not re-derive the styles by imitating older lessons (that is how styling bugs propagate). Because lessons are self-contained, editing the template does not update already-shipped lessons — fix those in place.
+**Start every lesson workspace from [lesson-template.html](./lesson-template.html)** — the canonical, accessible baseline lives there (CSS variables, the dark `.defense` callout with its required `.defense code` contrast override, the `.vsc`/`.gh` source-reference chips, the mobile viewport meta). Use it to seed the workspace's first lesson and shared assets, then factor reusable styling and behavior into `./assets/` as the lesson set grows. Do not re-derive the baseline by imitating older lessons (that is how styling bugs propagate). Because already-shipped lessons are static HTML, changing shared assets only updates lessons that link those assets — fix older self-contained lessons in place when needed.
 
 A lesson should be **beautiful** — clean, readable typography and layout — since the user will return to these later to review. Think Tufte.
 
@@ -80,6 +95,16 @@ Each lesson should link via HTML anchors to other lessons and reference document
 Each lesson should recommend a primary source for the user to read or watch. This should be the most high-quality, high-trust resource you found on the topic.
 
 Each lesson should contain a reminder to ask followup questions to the agent. The agent is their teacher, and can assist with anything that's unclear.
+
+## Assets
+
+Lessons are built from reusable **components**, stored in `./assets/`: stylesheets, quiz widgets, simulators, diagram helpers — anything a second lesson could reuse.
+
+Reuse is the default, not the exception. Before authoring a lesson, read `./assets/` and build from the components already there. When a lesson needs something new and reusable, write it as a component in `./assets/` and link to it — never inline code a future lesson would duplicate.
+
+A shared stylesheet is the first component every workspace earns: every lesson links it, so the lessons look like one consistent course rather than a pile of one-offs. As the workspace grows, so should the component library.
+
+Keep assets portable: lessons and assets should work over `file://`, Tailscale, and ordinary static hosting without a build step. Do not introduce package managers, bundlers, external CDNs, or network-only dependencies unless the user explicitly accepts that trade-off for the workspace.
 
 ### Linking to source code
 

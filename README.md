@@ -122,8 +122,13 @@ These files adapt the global skills and shared Ralph runner to the local reposit
 
 ## Install Shared Skills
 
+Install or update upstream-tracked Matt Pocock skills first, then install this repo's local-owned/shared skills:
+
 ```bash
+~/Code/GitHub/zainfathoni/agent-workflows/skills/update-upstream.sh
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
+
+`skills/update-upstream.sh` installs an explicit allowlist of upstream-tracked skills and intentionally excludes local-owned `teach`, so pulling this repo does not depend on a human remembering which upstream skills are safe to update.
 
 By default this symlinks shared skills into `~/.agents/skills`. Set `AGENT_SKILLS_DIR` to install somewhere else.
