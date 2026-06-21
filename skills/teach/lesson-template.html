@@ -11,8 +11,9 @@
   - <meta viewport> is present so lessons read well on mobile.
   - Body/background contrast is WCAG AA or better.
   - Code blocks include a visible .listen explanation for screen-reader and
-    phone-audio use; raw punctuation-heavy code is still focusable for exact
-    reading when needed.
+    phone-audio use; raw punctuation-heavy <pre> blocks are hidden from the
+    accessibility tree because WebKit/VoiceOver otherwise reads the rendered
+    text symbol-by-symbol even when role="img" or aria-label is present.
 
   Lessons and assets should work over file:// and ordinary static hosting
   without a build step. Workspace-specific hosting belongs in HOSTING.md.
@@ -45,7 +46,6 @@
   pre { background:#f4f6f8; border-left:3px solid var(--accent); padding:.9rem 1rem;
         overflow-x:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.79rem;
         line-height:1.45; }
-  pre:focus { outline:3px solid #9cc7dd; outline-offset:3px; }
   blockquote { border-left:3px solid var(--warn); margin:1.2rem 0; padding:.3rem 1rem;
                color:#3a3a3a; background:#faf6ea; }
   table { border-collapse:collapse; width:100%; font-size:.82rem; margin:1rem 0; }
@@ -92,7 +92,7 @@
 <figure>
   <figcaption>Diff showing the one important change.</figcaption>
   <p class="listen"><b>Listen first:</b> this snippet removes the old line and adds the new line. When listening, focus on the intent: the deleted line is the behaviour being replaced; the added line is the behaviour to remember.</p>
-  <pre tabindex="0" aria-label="Code diff: removed line followed by added line"><span class="del">- removed line</span>
+  <pre aria-hidden="true"><span class="del">- removed line</span>
 <span class="add">+ added line</span></pre>
 </figure>
 <!-- Source chips: BOTH links, same line. Re-grep the line number at the SHA first. -->

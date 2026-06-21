@@ -24,9 +24,9 @@ For every non-trivial code block:
 
 1. Put the code in a `<figure>` with a short `<figcaption>` that states what the snippet demonstrates.
 2. Add a visible prose summary immediately before the code, using a class such as `.listen`. Explain the code in words a screen reader can read naturally: name the key identifiers, say what changes, and describe symbols by purpose rather than dumping punctuation.
-3. Give the `<pre>` a concise `aria-label` and `tabindex="0"` so keyboard and screen-reader users can focus the exact code when they want it.
+3. Put the raw code in `<pre aria-hidden="true">`. Do not add `role="img"`, `aria-label`, or `tabindex` to the `<pre>`.
 
-Keep the raw code available; do not hide it from assistive tech by default. If a snippet is punctuation-heavy, prefer a short "Listen first" summary plus a line-by-line explanation after the block over expecting VoiceOver to make symbols meaningful.
+The raw code stays visible and selectable for sighted users, but the `.listen` prose is the accessible equivalent. This is intentional for punctuation-heavy snippets: WebKit/VoiceOver does not treat `role="img"` as a leaf when a `<pre>` has rendered text children, so Safari still descends into the code and reads symbols one by one. Hiding the raw `<pre>` from the accessibility tree avoids that failure mode and lets VoiceOver read only the human-friendly summary.
 
 Also keep lesson HTML structurally navigable:
 
