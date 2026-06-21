@@ -7,7 +7,7 @@ date: 2026-06-19
 
 ## Context
 
-The local-owned `teach` skill was originally preserved as a self-contained lesson workflow: each lesson started from a canonical HTML template and carried its own inline CSS. This made lessons easy to open over `file://`, serve over Tailscale, and archive without worrying about missing dependencies.
+The local-owned `teach` skill was originally preserved as a self-contained lesson workflow: each lesson started from a canonical HTML template and carried its own inline CSS. This made lessons easy to open over `file://`, publish through static hosting, and archive without worrying about missing dependencies.
 
 Matt Pocock's v1 upstream `teach` skill introduced a workspace-level `./assets/*` convention for reusable lesson components such as shared stylesheets, quiz widgets, simulators, and diagram helpers. The upstream package does not ship an `assets/` directory; it defines a convention for each teaching workspace to create one as needed.
 
@@ -21,7 +21,7 @@ The local-owned behavior still preserves Zain-specific teaching constraints:
 
 - source-derived workspace directory names for lessons tied to tickets, PRs, support cases, or other hosted sources;
 - codebase source references with both local VS Code deep links and pinned GitHub permalinks;
-- Tailscale lesson serving guidance;
+- workspace-owned hosting documentation instead of a hardcoded generic Tailscale default;
 - no package managers, bundlers, external CDNs, or network-only runtime dependencies unless explicitly accepted for that workspace.
 - explicit tracking of the local `teach` delta so future upstream comparisons do not accidentally erase local-owned behavior.
 - upstream `teach` changes are input, not authority: adopt them only when they improve the teaching model without weakening the local delta, and grill conflicts before changing local `teach`.

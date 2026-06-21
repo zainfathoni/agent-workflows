@@ -56,6 +56,10 @@ _Avoid_: Local-owned skill, fork
 The `./assets/*` directory inside a `teach` workspace that stores reusable lesson components such as shared stylesheets, quiz widgets, simulators, and diagram helpers.
 _Avoid_: Skill assets, bundled upstream assets
 
+**Teaching Workspace Hosting**:
+The per-workspace instructions that tell `teach` how static lessons and reference documents are previewed or published, such as a custom domain, GitHub Pages, a repo-specific app deployment, or an optional Tailscale serve mapping.
+_Avoid_: Teach skill hosting, hardcoded Tailscale hosting
+
 **Local Teach Delta**:
 The explicitly documented behavior that Agent Workflows adds to the upstream `teach` skill and must preserve during upstream comparisons.
 _Avoid_: Fork drift, accidental changes
@@ -80,7 +84,7 @@ _Avoid_: Private review
 - **Upstream Skills** are installed from their upstream source; only materially customized skills become **Local-Owned Skills** in Agent Workflows.
 - **Upstream-Tracked Skills** may accept upstream breaking changes, including renames and removal of deprecated skills.
 - The v1 upstream grilling stack (`grilling`, `domain-modeling`, and `grill-with-docs`) remains **Upstream-Tracked** unless Agent Workflows needs concrete customized behavior.
-- Local-owned `teach` workspaces use **Teaching Workspace Assets** as the default lesson architecture while preserving local codebase source-linking and lesson-serving behavior.
+- Local-owned `teach` workspaces use **Teaching Workspace Assets** as the default lesson architecture while preserving local codebase source-linking behavior and deferring publication details to **Teaching Workspace Hosting**.
 - The **Local Teach Delta** is the preservation checklist for local-owned `teach`; upstream comparisons may add accepted upstream behavior, but must not erase the delta.
 - **Private Review** skills protect pending review artifacts.
 - **Team Review** skills manage colleague-visible review feedback and thread resolution.
@@ -92,6 +96,7 @@ _Avoid_: Private review
 - **Repo-Local Agent Docs** are not a second source of truth for work. GitHub Issues remain the work source of truth.
 - **Shared Skill** does not mean every globally installed skill. Use **Upstream Skill** for skills owned elsewhere and **Local-Owned Skill** for customized skills maintained here.
 - **Teaching Workspace Assets** are created inside each teaching workspace; they are not files bundled in Matt Pocock's upstream `teach` skill package.
+- **Teaching Workspace Hosting** belongs to the teaching workspace, not the generic `teach` skill. Tailscale is one possible hosting method, not the default for every workspace.
 - **Local Teach Delta** should be updated whenever a local-owned `teach` behavior is accepted, rejected, or deliberately retired.
 - Upstream `teach` changes are input, not authority. Adopt them only when they improve the teaching model without weakening the **Local Teach Delta**; conflicts require explicit grilling acceptance.
 - **Private Review** and **Team Review** are intentionally separate. Do not use private pending-review cleanup rules to mutate team-visible threads.

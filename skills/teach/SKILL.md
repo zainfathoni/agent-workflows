@@ -13,9 +13,10 @@ This `teach` skill is local-owned. When comparing it with Matt Pocock's upstream
 
 - source-derived workspace directory names for topics tied to hosted sources;
 - reusable `./assets/*` as the default lesson architecture;
-- static/offline/Tailscale portability for lesson assets, with no build step or network-only dependencies unless explicitly accepted;
+- static/offline hosting portability for lesson assets, with no build step or network-only dependencies unless explicitly accepted;
+- per-workspace hosting documentation via `HOSTING.md`;
 - codebase source references with both VS Code deep links and pinned GitHub permalinks;
-- Tailscale lesson serving guidance and `serve-lessons.sh`;
+- optional Tailscale serving helper `serve-lessons.sh` for workspaces that choose that hosting method;
 - Tycho structured inquiry feedback loops;
 - committed local templates and scripts in this directory.
 
@@ -46,6 +47,7 @@ The state of their learning is captured in this directory in several files:
 - `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
 - `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
 - `RESOURCES.md`: A list of resources which can be explored to ground your teaching in contextual knowledge, or to acquire knowledge and wisdom. Use the format in [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
+- `HOSTING.md`: A document describing how this workspace's static lessons and reference docs are previewed or published, including base URLs and verification commands. Use the format in [HOSTING-FORMAT.md](./HOSTING-FORMAT.md). Create it lazily when the first hosted link is needed.
 - `./learning-records/*.md`: A directory of learning records, which capture what the user has learned. These are loosely equivalent to architectural decision records in software development - they capture non-obvious lessons and key insights that may need to be revised later, or drive future sessions. These should be used to calculate the zone of proximal development. They are titled `0001-<dash-case-name>.md`, where the number increments each time. Use the format in [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
 - `./lessons/*.html`: A directory of lessons. A **lesson** is a single HTML output that teaches one tightly-scoped thing tied to the mission and links to reusable workspace assets when appropriate. This is the primary unit of teaching in this workspace.
 - `./assets/*`: Reusable **components** shared across lessons. See [Assets](#assets).
@@ -88,7 +90,7 @@ Beautiful also means **accessible**: keep text/background contrast at WCAG AA or
 
 The lesson should be short, and completable very quickly. Learners' working memory is very small, and we need to stay within it. But each lesson should give the user a single tangible win that they can build on. It should be directly tied to the mission, and should be in the user's zone of proximal development.
 
-If possible, open the lesson file for the user by running a CLI command. **Also surface the lesson's tailnet URL** whenever the workspace is (or can be) served over Tailscale — `open` only helps on the host machine, but the user often reads lessons from a phone or tablet. If a `tailscale serve` mapping already covers the workspace, hand over the full `https://<host>.<tailnet>.ts.net<URL_PATH>/<lesson-path>` URL alongside the local `open`; otherwise offer to start it with [serve-lessons.sh](./serve-lessons.sh) (see "Serving lessons over Tailscale" below). Do not stop at a local `open` and assume the user is at the host.
+If possible, open the lesson file for the user by running a CLI command. Also surface the best hosted URL for the lesson when one is documented in `HOSTING.md`; `open` only helps on the host machine, but the user often reads lessons from a phone or tablet. If hosting is not documented yet, ask whether the workspace should use an existing app/domain, GitHub Pages, a local static server, Tailscale, or another repo-specific method before inventing one.
 
 Each lesson should link via HTML anchors to other lessons and reference documents.
 
@@ -104,7 +106,7 @@ Reuse is the default, not the exception. Before authoring a lesson, read `./asse
 
 A shared stylesheet is the first component every workspace earns: every lesson links it, so the lessons look like one consistent course rather than a pile of one-offs. As the workspace grows, so should the component library.
 
-Keep assets portable: lessons and assets should work over `file://`, Tailscale, and ordinary static hosting without a build step. Do not introduce package managers, bundlers, external CDNs, or network-only dependencies unless the user explicitly accepts that trade-off for the workspace.
+Keep assets portable: lessons and assets should work over `file://` and ordinary static hosting without a build step. They may also work over Tailscale, GitHub Pages, a custom domain, or a repo-specific deployed app when `HOSTING.md` documents that method. Do not introduce package managers, bundlers, external CDNs, or network-only dependencies unless the user explicitly accepts that trade-off for the workspace.
 
 ### Linking to source code
 
@@ -116,14 +118,32 @@ When the topic is a codebase (e.g. understanding a PR or a module), every refere
 - Render them as small monospace chips with a short caption line under the relevant code block: a `.vsc` chip (`filename:line`) followed by a `.gh` chip (`GitHub↗`), under a `.srcline` caption.
 - On first click the browser may prompt to open VS Code; that's expected.
 
-When lessons are served to other devices (e.g. via `tailscale serve` over the tailnet), remember the VS Code chips will target the *viewing* device's filesystem and won't navigate — the GitHub permalink is the one that works remotely. This is why both are required.
+When lessons are served to other devices, remember the VS Code chips will target the *viewing* device's filesystem and won't navigate — the GitHub permalink is the one that works remotely. This is why both are required.
 
-### Serving lessons over Tailscale
+## Hosting Lessons
 
-To read lessons on a phone/tablet/other machine, serve the workspace over the tailnet with [serve-lessons.sh](./serve-lessons.sh):
+Hosting is workspace-owned, not hardcoded by this skill. Before publishing or handing over a remote lesson URL, read `HOSTING.md` if it exists. If it does not exist and the user wants hosted links, create it from [HOSTING-FORMAT.md](./HOSTING-FORMAT.md) after confirming the intended method.
+
+`HOSTING.md` can describe any static-friendly publication path:
+
+- a custom deployed app or domain such as `https://ai.zainf.dev/`;
+- GitHub Pages or another static host;
+- a repository-specific preview command;
+- Tailscale for private notes workspaces;
+- local-only `file://` usage when no remote hosting is desired.
+
+When handing over a lesson, prefer this order:
+
+1. The hosted URL documented in `HOSTING.md`, verified with its listed command.
+2. The local file path opened with `open`.
+3. A prompt to define `HOSTING.md` if the user needs cross-device access and no hosting method exists yet.
+
+### Optional Tailscale helper
+
+For workspaces that choose private tailnet hosting, serve the workspace over Tailscale with [serve-lessons.sh](./serve-lessons.sh):
 
 ```bash
-~/.claude/skills/teach/serve-lessons.sh [TEACH_DIR] [PORT] [URL_PATH]
+~/.agents/skills/teach/serve-lessons.sh [TEACH_DIR] [PORT] [URL_PATH]
 # defaults: TEACH_DIR=$PWD, PORT=7374, URL_PATH=/teach
 ```
 
