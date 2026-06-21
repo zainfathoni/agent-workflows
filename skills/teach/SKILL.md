@@ -11,6 +11,7 @@ The user wants a stateful, multi-session learning workspace.
 
 1. Treat the current directory as the teaching workspace unless the request points at a specific workspace or source. For source-derived workspace naming and local-owned preservation rules, use [WORKSPACE.md](./WORKSPACE.md).
 2. Read existing workspace state before teaching: `MISSION.md`, `RESOURCES.md`, `HOSTING.md` if present, `NOTES.md`, `learning-records/`, `lessons/`, `reference/`, and `assets/`.
+   If this is a new workspace, create files lazily in this order: `MISSION.md`, `RESOURCES.md` when sources are needed, `NOTES.md` when preferences or working notes exist, then `assets/`, `lessons/`, `reference/`, and `learning-records/` only when the first artifact in each category is earned.
 3. If `MISSION.md` is missing or vague, interview for the concrete outcome first. Use [MISSION-FORMAT.md](./MISSION-FORMAT.md).
 4. Choose the next lesson from the mission and the learner's zone of proximal development. Use [TEACHING-MODEL.md](./TEACHING-MODEL.md) for the philosophy, learning records, resources, and wisdom/community rules.
 5. When creating or revising lessons, reference docs, assets, source-code links, or hosted URLs, follow [LESSON-RULES.md](./LESSON-RULES.md).
