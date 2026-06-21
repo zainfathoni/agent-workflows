@@ -5,256 +5,29 @@ disable-model-invocation: true
 argument-hint: "What would you like to learn about?"
 ---
 
-The user has asked you to teach them something. This is a stateful request - they intend to learn the topic over multiple sessions.
-
-## Local-Owned Delta
-
-This `teach` skill is local-owned. When comparing it with Matt Pocock's upstream `teach`, preserve these local behaviors unless a grilling decision explicitly retires one:
-
-- source-derived workspace directory names for topics tied to hosted sources;
-- reusable `./assets/*` as the default lesson architecture;
-- static/offline hosting portability for lesson assets, with no build step or network-only dependencies unless explicitly accepted;
-- per-workspace hosting documentation via `HOSTING.md`;
-- codebase source references with both VS Code deep links and pinned GitHub permalinks;
-- optional Tailscale serving helper `serve-lessons.sh` for workspaces that choose that hosting method;
-- Tycho structured inquiry feedback loops;
-- committed local templates and scripts in this directory.
-
-Upstream changes are input, not authority. Adopt them only when they improve the teaching model without weakening this local-owned delta. If an upstream change conflicts with the delta, grill the trade-off and require explicit acceptance before modifying local `teach`.
-
-## Teaching Workspace
-
-Treat the current directory as a teaching workspace. When a topic has a single
-canonical source (a ticket, a PR, a support case), give it its own subdirectory
-named `<source>-<id>`, where the **prefix is always derived from where the
-original information is hosted** — never a generic word like `issue-`. Examples:
-
-| Source of the original information | Prefix | Example dir |
-| ---------------------------------- | ------ | ----------- |
-| Trello card                        | `trello-` | `trello-HSwwTrRE/` |
-| Zendesk ticket                     | `zendesk-` | `zendesk-93087/` |
-| GitHub pull request                | `pr-`   | `pr-11826/` |
-| GitHub issue                       | `gh-`   | `gh-4821/` |
-| Shortcut story                     | `sc-`   | `sc-46543/` |
-
-If a topic spans several sources, pick the prefix of the *system of record* (the
-one you would cite first) and note the others in `MISSION.md`. If a topic has no
-hosted source at all (e.g. "teach me yoga"), use a plain dash-case slug with no
-prefix.
-
-The state of their learning is captured in this directory in several files:
-
-- `MISSION.md`: A document capturing the _reason_ the user is interested in the topic. This should be used to ground all teaching. Use the format in [MISSION-FORMAT.md](./MISSION-FORMAT.md).
-- `./reference/*.html`: A directory of reference materials. These are the compressed learnings from the lessons - cheat sheets, reference algorithms, syntax, yoga poses, glossaries. They are the raw units of learning. They should be beautiful documents which print out well, and are designed for quick reference.
-- `RESOURCES.md`: A list of resources which can be explored to ground your teaching in contextual knowledge, or to acquire knowledge and wisdom. Use the format in [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
-- `HOSTING.md`: A document describing how this workspace's static lessons and reference docs are previewed or published, including base URLs and verification commands. Use the format in [HOSTING-FORMAT.md](./HOSTING-FORMAT.md). Create it lazily when the first hosted link is needed.
-- `./learning-records/*.md`: A directory of learning records, which capture what the user has learned. These are loosely equivalent to architectural decision records in software development - they capture non-obvious lessons and key insights that may need to be revised later, or drive future sessions. These should be used to calculate the zone of proximal development. They are titled `0001-<dash-case-name>.md`, where the number increments each time. Use the format in [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md).
-- `./lessons/*.html`: A directory of lessons. A **lesson** is a single HTML output that teaches one tightly-scoped thing tied to the mission and links to reusable workspace assets when appropriate. This is the primary unit of teaching in this workspace.
-- `./assets/*`: Reusable **components** shared across lessons. See [Assets](#assets).
-- `NOTES.md`: A scratchpad for you to jot down user preferences, or working notes.
-
-## Philosophy
-
-To learn at a deep level, the user needs three things:
-
-- **Knowledge**, captured from high-quality, high-trust resources
-- **Skills**, acquired through highly-relevant interactive lessons devised by you, based on the knowledge
-- **Wisdom**, which comes from interacting with other learners and practitioners
-
-Before the `RESOURCES.md` is well-populated, your focus should be to find high-quality resources which will help the user acquire knowledge. Never trust your parametric knowledge.
-
-Some topics may require more skills than knowledge. Learning more about theoretical physics might be more knowledge-based. For yoga, more skills-based.
-
-### Fluency vs Storage Strength
-
-You should be careful to split between two types of learning:
-
-- **Fluency strength**: in-the-moment retrieval of knowledge
-- **Storage strength**: long-term retention of knowledge
-
-Fluency can give the user an illusory sense of mastery, but storage strength is the real goal. Try to design lessons which build long-term retention by desirable difficulty:
-
-- Using retrieval practice (recall from memory)
-- Spacing (distributing practice over time)
-- Interleaving (mixing up different but related topics in practice - for skills practice only)
-
-## Lessons
-
-A lesson is the main thing you produce — the unit in which knowledge and skills reach the user. Each lesson is one HTML file, saved to `./lessons/` and titled `0001-<dash-case-name>.html` where the number increments each time. Lessons should reuse workspace assets by default rather than duplicating shared styles or interaction code.
-
-**Start every lesson workspace from [lesson-template.html](./lesson-template.html)** — the canonical, accessible baseline lives there (CSS variables, the dark `.defense` callout with its required `.defense code` contrast override, the `.vsc`/`.gh` source-reference chips, the mobile viewport meta). Use it to seed the workspace's first lesson and shared assets, then factor reusable styling and behavior into `./assets/` as the lesson set grows. Do not re-derive the baseline by imitating older lessons (that is how styling bugs propagate). Because already-shipped lessons are static HTML, changing shared assets only updates lessons that link those assets — fix older self-contained lessons in place when needed.
-
-A lesson should be **beautiful** — clean, readable typography and layout — since the user will return to these later to review. Think Tufte.
-
-Beautiful also means **accessible**: keep text/background contrast at WCAG AA or better (≥4.5:1 for body text). The most common trap is a dark callout box (e.g. a highlighted "key takeaway" panel with light text) that contains inline `<code>` styled by a global rule giving it a *light* background and no explicit color — the code then inherits the panel's light text and becomes near-invisible (light-on-light). Whenever a box overrides the default text color, add a matching override for any nested `<code>`/`<pre>` so they stay legible inside it. Add a viewport meta tag (`width=device-width`) so lessons read well on mobile.
-
-The lesson should be short, and completable very quickly. Learners' working memory is very small, and we need to stay within it. But each lesson should give the user a single tangible win that they can build on. It should be directly tied to the mission, and should be in the user's zone of proximal development.
-
-If possible, open the lesson file for the user by running a CLI command. Also surface the best hosted URL for the lesson when one is documented in `HOSTING.md`; `open` only helps on the host machine, but the user often reads lessons from a phone or tablet. If hosting is not documented yet, ask whether the workspace should use an existing app/domain, GitHub Pages, a local static server, Tailscale, or another repo-specific method before inventing one.
-
-Each lesson should link via HTML anchors to other lessons and reference documents.
-
-Each lesson should recommend a primary source for the user to read or watch. This should be the most high-quality, high-trust resource you found on the topic.
-
-Each lesson should contain a reminder to ask followup questions to the agent. The agent is their teacher, and can assist with anything that's unclear.
-
-## Assets
-
-Lessons are built from reusable **components**, stored in `./assets/`: stylesheets, quiz widgets, simulators, diagram helpers — anything a second lesson could reuse.
-
-Reuse is the default, not the exception. Before authoring a lesson, read `./assets/` and build from the components already there. When a lesson needs something new and reusable, write it as a component in `./assets/` and link to it — never inline code a future lesson would duplicate.
-
-A shared stylesheet is the first component every workspace earns: every lesson links it, so the lessons look like one consistent course rather than a pile of one-offs. As the workspace grows, so should the component library.
-
-Keep assets portable: lessons and assets should work over `file://` and ordinary static hosting without a build step. They may also work over Tailscale, GitHub Pages, a custom domain, or a repo-specific deployed app when `HOSTING.md` documents that method. Do not introduce package managers, bundlers, external CDNs, or network-only dependencies unless the user explicitly accepts that trade-off for the workspace.
-
-### Linking to source code
-
-When the topic is a codebase (e.g. understanding a PR or a module), every reference to a real source file in a lesson or reference document should carry **two** clickable links so the user can jump to the code from any device:
-
-- **VS Code deep link (local):** `vscode://file/<absolute-path>:<line>` (optionally `:<line>:<col>`). Note the **single** slash after `file` — the absolute path's own leading `/` supplies the separator. `vscode://file//Users/...` is wrong. Works only on the machine that holds the repo.
-- **GitHub permalink (portable):** `https://github.com/<owner>/<repo>/blob/<commit-SHA>/<repo-rel-path>#L<line>`. Pin to the **reviewed commit SHA** (the PR head), never a branch name — a branch link drifts as new commits land and the line numbers stop matching. This is the link that works when the lessons are viewed from a phone/tablet over Tailscale or shared with a colleague.
-- Always re-derive line numbers against that exact commit (grep the working tree at that SHA) before linking — line numbers drift; never trust a diff's line hints. The VS Code and GitHub links must point at the same line.
-- Render them as small monospace chips with a short caption line under the relevant code block: a `.vsc` chip (`filename:line`) followed by a `.gh` chip (`GitHub↗`), under a `.srcline` caption.
-- On first click the browser may prompt to open VS Code; that's expected.
-
-When lessons are served to other devices, remember the VS Code chips will target the *viewing* device's filesystem and won't navigate — the GitHub permalink is the one that works remotely. This is why both are required.
-
-## Hosting Lessons
-
-Hosting is workspace-owned, not hardcoded by this skill. Before publishing or handing over a remote lesson URL, read `HOSTING.md` if it exists. If it does not exist and the user wants hosted links, create it from [HOSTING-FORMAT.md](./HOSTING-FORMAT.md) after confirming the intended method.
-
-`HOSTING.md` can describe any static-friendly publication path:
-
-- a custom deployed app or domain such as `https://ai.zainf.dev/`;
-- GitHub Pages or another static host;
-- a repository-specific preview command;
-- Tailscale for private notes workspaces;
-- local-only `file://` usage when no remote hosting is desired.
-
-When handing over a lesson, prefer this order:
-
-1. The hosted URL documented in `HOSTING.md`, verified with its listed command.
-2. The local file path opened with `open`.
-3. A prompt to define `HOSTING.md` if the user needs cross-device access and no hosting method exists yet.
-
-### Optional Tailscale helper
-
-For workspaces that choose private tailnet hosting, serve the workspace over Tailscale with [serve-lessons.sh](./serve-lessons.sh):
-
-```bash
-~/.agents/skills/teach/serve-lessons.sh [TEACH_DIR] [PORT] [URL_PATH]
-# defaults: TEACH_DIR=$PWD, PORT=7374, URL_PATH=/teach
-```
-
-It does two things, both idempotent so it's safe to re-run:
-
-1. **Local static server** — `python3 -m http.server <PORT> --bind 127.0.0.1 --directory <TEACH_DIR>`, started only if nothing already holds the port. Bound to localhost so Tailscale is the sole access path. This process is **ephemeral** (dies on reboot/logout) — re-run the script to bring it back.
-2. **Tailnet proxy** — `tailscale serve --bg --set-path <URL_PATH> http://127.0.0.1:<PORT>`. This mapping is **persistent** (survives reboots) and **tailnet-only** — reachable from your logged-in devices, not the public internet.
-
-Prerequisites: Tailscale installed and logged into the tailnet, with HTTPS/MagicDNS enabled (so `serve` can mint the cert). The resulting URL is `https://<this-host>.<tailnet>.ts.net<URL_PATH>/<lesson-path>`.
-
-Before giving lesson links, verify the active server is serving the intended teach
-root, not a stale single-topic workspace:
-
-- Run `tailscale serve status` and confirm `<URL_PATH>` maps to the expected local
-  port.
-- Check at least one lesson locally with `curl -I
-  http://127.0.0.1:<PORT>/<topic>/lessons/<lesson>.html`.
-- If a Tailscale hostname is known, check the tailnet URL with `curl -I` too.
-- If the port is occupied by an old `http.server` rooted at the wrong directory,
-  restart it against the shared teach root before sharing links.
-
-To stop sharing, remove the mapping with `tailscale serve --set-path <URL_PATH> off` and kill the `http.server` process.
-
-## The Mission
-
-Every lesson should be tied into the mission - the reason that the user is interested in learning about the topic.
-
-If the user is unclear about the mission, or the `MISSION.md` is not populated, your first job should be to question the user on why they want to learn this.
-
-Failing to understand the mission will mean knowledge acquisition is not grounded in real-world goals. Lessons will feel too abstract. You will have no way of judging what the user should do next.
-
-Missions may change as the user develops more skills and knowledge. This is normal - make sure to update the `MISSION.md` and add a learning record to capture the change. Confirm with the user before changing the mission.
-
-## Zone Of Proximal Development
-
-Each lesson, the user should always feel as if they are being challenged 'just enough'.
-
-The user may specify an exact thing they want to learn. If they don't, figure out their zone of proximal development by:
-
-- Reading their `learning-records`
-- Figuring out the right thing to teach them based on their mission
-- Teach the most relevant thing that fits in their zone of proximal development
-
-## Knowledge
-
-Lessons should be designed around a skill the user is going to learn. The knowledge in the lesson should be only what's required to acquire that skill. You teach the knowledge first, then get the user to practice the skills via an interactive feedback loop.
-
-Knowledge should first be gathered from trusted resources. Use `RESOURCES.md` to keep track of them. Lessons should be littered with citations - links to external resources to back up any claim made. This increases the trustworthiness of the lesson.
-
-For acquiring knowledge, difficulty is the enemy. It eats working memory you need for understanding.
-
-## Skills
-
-If knowledge is all about acquisition, skills are about durability and flexibility. Make the knowledge stick.
-
-For skill acquisition, difficulty is the tool. Effortful retrieval is what builds storage strength. Skills should be taught through interactive lessons. There are several tools at your disposal:
-
-- Interactive lessons, using quizzes and light in-browser tasks
-- Lessons which guide the user through a list of real-world steps to take (for instance, yoga poses)
-
-Each of these should be based on a **feedback loop**, where the user receives feedback on their performance. This feedback loop should be as tight as possible, giving feedback immediately - and ideally automatically.
-
-For quizzes, each answer should be exactly the same number of words (and characters, if possible). Don't give the user any clues about the answer through formatting.
-
-### Tycho inquiry feedback loops
-
-When running in Tycho and asking the user to answer a quiz or choose a next teaching
-direction, prefer the structured final-response `inquiry` object over markdown-only
-questions. Do not use `request_user_input` as the primary path unless that tool is
-available in the current mode; in Tycho Default mode it may be unavailable even
-though final-response inquiries work.
-
-For multiple-choice quizzes, create one inquiry field per question:
-
-- Use `input_type: "select"` for each multiple-choice question.
-- Put the choices in that field's `options` array.
-- Use stable keys such as `q1_presence_gate` or `q2_destroyed_booking`.
-- Do not flatten several questions into one free-text field.
-- Use `input_type: "text"` only for free-recall prompts where the user should
-  explain a mechanism in their own words.
-
-After the user answers, grade each field explicitly, give corrective feedback for
-misses, and record the result in `NOTES.md`. Write a learning record only when the
-user demonstrates the concept, not merely because it was covered.
-
-## Acquiring Wisdom
-
-Wisdom comes from true real-world interaction - testing your skills outside the learning environment.
-
-When the user asks a question that appears to require wisdom, your default posture should be to attempt to answer - but to ultimately delegate to a **community**.
-
-A community is a place (online or offline) where the user can test their skills in the real world. This might be a forum, a subreddit, a real-world class (budget permitting) or a local interest group.
-
-You should attempt to find high-reputation communities the user can join. If the user expresses a preference that they don't want to join a community, respect it.
-
-## Reference Documents
-
-While creating lessons, you should also create reference documents. Lessons can reference these documents - they are useful for tracking raw units of knowledge useful across lessons.
-
-Lessons will rarely be revisited later - reference documents will be. They should be the compressed essence of the lesson, in a format designed for quick reference.
-
-Some learning topics lend themselves to reference:
-
-- Syntax and code snippets for programming
-- Algorithms and flowcharts for processes
-- Yoga poses and sequences for yoga
-- Exercises and routines for fitness
-- Glossaries for any topic with its own nomenclature
-
-Glossaries, in particular, are an essential reference. Once one is created, it should be adhered to in every lesson.
-
-## `NOTES.md`
-
-The user will sometimes express preferences of how they want to be taught, or things you should keep in mind. This is the place to record those preferences, so you can refer back to them when designing lessons or working with the user.
+The user wants a stateful, multi-session learning workspace.
+
+## Start here
+
+1. Treat the current directory as the teaching workspace unless the request points at a specific workspace or source. For source-derived workspace naming and local-owned preservation rules, use [WORKSPACE.md](./WORKSPACE.md).
+2. Read existing workspace state before teaching: `MISSION.md`, `RESOURCES.md`, `HOSTING.md` if present, `NOTES.md`, `learning-records/`, `lessons/`, `reference/`, and `assets/`.
+3. If `MISSION.md` is missing or vague, interview for the concrete outcome first. Use [MISSION-FORMAT.md](./MISSION-FORMAT.md).
+4. Choose the next lesson from the mission and the learner's zone of proximal development. Use [TEACHING-MODEL.md](./TEACHING-MODEL.md) for the philosophy, learning records, resources, and wisdom/community rules.
+5. When creating or revising lessons, reference docs, assets, source-code links, or hosted URLs, follow [LESSON-RULES.md](./LESSON-RULES.md).
+6. When running quizzes or asking for lesson-direction choices, follow [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md).
+7. Record durable learning only when evidenced. Use [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md). Put transient preferences and working notes in `NOTES.md`.
+
+## Workspace files
+
+- `MISSION.md` — why the user is learning this topic.
+- `RESOURCES.md` — trusted knowledge sources and communities. Use [RESOURCES-FORMAT.md](./RESOURCES-FORMAT.md).
+- `HOSTING.md` — workspace-owned lesson hosting. Use [HOSTING-FORMAT.md](./HOSTING-FORMAT.md); create it lazily when hosted links are needed.
+- `lessons/*.html` — short, single-win lesson outputs.
+- `reference/*.html` — reusable cheat sheets, maps, glossaries, algorithms, and syntax references.
+- `assets/*` — reusable components shared across lessons.
+- `learning-records/*.md` — evidenced learning, prior knowledge, misconceptions corrected, or mission shifts.
+- `NOTES.md` — scratchpad for teaching preferences and working notes.
+
+## Local-owned guardrail
+
+This `teach` skill is local-owned. Upstream changes are input, not authority: adopt them only when they improve teaching without weakening the local delta in [WORKSPACE.md](./WORKSPACE.md). Conflicts require explicit grilling acceptance before changing local `teach`.
