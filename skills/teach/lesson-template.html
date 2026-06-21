@@ -10,6 +10,9 @@
     inline code never ends up light-on-light (the classic cascade-gap bug).
   - <meta viewport> is present so lessons read well on mobile.
   - Body/background contrast is WCAG AA or better.
+  - Code blocks include a visible .listen explanation for screen-reader and
+    phone-audio use; raw punctuation-heavy code is still focusable for exact
+    reading when needed.
 
   Lessons and assets should work over file:// and ordinary static hosting
   without a build step. Workspace-specific hosting belongs in HOSTING.md.
@@ -37,9 +40,12 @@
   h3 { font-size:1rem; margin-top:1.5rem; color:var(--accent); }
   code { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.84em;
          background:#eef1f4; padding:.1em .3em; border-radius:3px; }
+  figure { margin:1.2rem 0; }
+  figcaption { font-size:.86rem; color:var(--muted); margin-bottom:.35rem; }
   pre { background:#f4f6f8; border-left:3px solid var(--accent); padding:.9rem 1rem;
         overflow-x:auto; font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.79rem;
         line-height:1.45; }
+  pre:focus { outline:3px solid #9cc7dd; outline-offset:3px; }
   blockquote { border-left:3px solid var(--warn); margin:1.2rem 0; padding:.3rem 1rem;
                color:#3a3a3a; background:#faf6ea; }
   table { border-collapse:collapse; width:100%; font-size:.82rem; margin:1rem 0; }
@@ -56,6 +62,11 @@
           font-size:.85rem; color:var(--muted); }
   .ask { background:#eef4f7; border:1px solid #cfe0e8; border-radius:6px;
          padding:.7rem 1rem; font-size:.9rem; }
+  .listen { background:#fff7df; border:1px solid #eadca8; border-radius:6px;
+            padding:.7rem 1rem; font-size:.9rem; }
+  .skip { position:absolute; left:-999px; top:auto; width:1px; height:1px; overflow:hidden; }
+  .skip:focus { left:1rem; top:1rem; width:auto; height:auto; padding:.5rem .7rem;
+                background:#fff; border:2px solid var(--accent); border-radius:4px; z-index:1; }
   /* Source-reference chips: .vsc = local VS Code, .gh = portable GitHub permalink */
   .vsc { font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.72rem;
          text-decoration:none; background:#eef1f4; border:1px solid #cfe0e8;
@@ -69,6 +80,8 @@
 </style>
 </head>
 <body>
+<a class="skip" href="#lesson-main">Skip to lesson content</a>
+<main id="lesson-main">
 
 <h1>LESSON HEADLINE — the one idea</h1>
 <p class="sub">Lesson N · PR #NNNNN · one-line framing tied to the mission</p>
@@ -76,12 +89,16 @@
 <p>Open with the concrete problem this lesson resolves. Keep it short — one win.</p>
 
 <h2>A section</h2>
-<pre><span class="del">- removed line</span>
+<figure>
+  <figcaption>Diff showing the one important change.</figcaption>
+  <p class="listen"><b>Listen first:</b> this snippet removes the old line and adds the new line. When listening, focus on the intent: the deleted line is the behaviour being replaced; the added line is the behaviour to remember.</p>
+  <pre tabindex="0" aria-label="Code diff: removed line followed by added line"><span class="del">- removed line</span>
 <span class="add">+ added line</span></pre>
+</figure>
 <!-- Source chips: BOTH links, same line. Re-grep the line number at the SHA first. -->
 <p class="srcline">Source (local · remote):
-  <a class="vsc" href="vscode://file/ABS/PATH/file.ext:NN">file.ext:NN</a>
-  <a class="gh" href="https://github.com/OWNER/REPO/blob/COMMIT_SHA/repo/rel/path.ext#LNN">GitHub↗</a></p>
+  <a class="vsc" href="vscode://file/ABS/PATH/file.ext:NN" aria-label="Open local source file.ext line NN in VS Code">file.ext:NN</a>
+  <a class="gh" href="https://github.com/OWNER/REPO/blob/COMMIT_SHA/repo/rel/path.ext#LNN" aria-label="Open pinned GitHub source for file.ext line NN">GitHub↗</a></p>
 
 <blockquote>A reviewer's likely objection, and the crisp rebuttal.</blockquote>
 
@@ -104,6 +121,6 @@ The single thing to be able to say in review without hesitating. Inline
 <p class="ask">💬 I'm your teacher for this — ask me followups any time.</p>
 
 <p class="foot">Lesson N of M · workspace teach/pr-NNNNN · mission: …</p>
+</main>
 </body>
 </html>
-</content>

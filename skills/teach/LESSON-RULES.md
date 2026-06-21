@@ -11,9 +11,31 @@ Every lesson should:
 - be beautiful, readable, and accessible;
 - include viewport metadata and WCAG AA body-text contrast;
 - keep dark callout boxes legible by overriding nested `code`/`pre` colours;
+- make code blocks listenable in screen readers, especially mobile Safari;
 - link to related lessons and reference docs;
 - recommend one primary high-trust source;
 - remind the user to ask follow-up questions.
+
+## Screen-reader and listening support
+
+Lessons are often consumed by listening, not looking. Treat raw code as a visual artifact that needs an audio-friendly companion.
+
+For every non-trivial code block:
+
+1. Put the code in a `<figure>` with a short `<figcaption>` that states what the snippet demonstrates.
+2. Add a visible prose summary immediately before the code, using a class such as `.listen`. Explain the code in words a screen reader can read naturally: name the key identifiers, say what changes, and describe symbols by purpose rather than dumping punctuation.
+3. Give the `<pre>` a concise `aria-label` and `tabindex="0"` so keyboard and screen-reader users can focus the exact code when they want it.
+
+Keep the raw code available; do not hide it from assistive tech by default. If a snippet is punctuation-heavy, prefer a short "Listen first" summary plus a line-by-line explanation after the block over expecting VoiceOver to make symbols meaningful.
+
+Also keep lesson HTML structurally navigable:
+
+- include a skip link to `<main>`;
+- use one `<h1>` and ordered heading levels;
+- write descriptive link text instead of "click here";
+- give images meaningful `alt` text, or empty `alt=""` only for decorative images;
+- avoid conveying meaning with colour, emoji, or punctuation alone;
+- label source chips clearly, e.g. `aria-label="Open local source file.ext line NN in VS Code"` and `aria-label="Open pinned GitHub source for file.ext line NN"`.
 
 ## Assets
 
