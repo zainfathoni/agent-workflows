@@ -25,6 +25,7 @@ Suggested slash command: `/team-review <pr-number-or-url>`
 - For correctness findings, try to prove the case with a focused failing test, existing test gap, or browser/manual evidence before publishing; use the `tdd` skill's one-test-at-a-time proof discipline when feasible, but keep public comments focused on the verified behavior rather than internal process labels
 - Do not submit a GitHub review unless the user explicitly asks
 - If preparing a pending review, make clear it is teammate-facing and may be submitted later
+- Never use the REST pull request comments endpoint (`POST /pulls/<pr-number>/comments`) while drafting; it publishes immediately instead of adding to a pending review
 
 ## Workflow
 
@@ -84,6 +85,7 @@ Before any teammate-visible submission, create or update a current-user **PENDIN
 - Replace an existing pending review with the complete reconciled comment set rather than stacking drafts
 - Keep comments colleague-ready, but pending until the user explicitly asks to submit or publish them for teammate exposure
 - If a comment is backed by a focused failing test, format it as: concise issue, "Minimal failing case:" with only the necessary test lines, the failing expectation/received value, then the requested fix direction
+- If a pending inline comment needs a GitHub ````suggestion` block, follow `self-review`'s GraphQL `addPullRequestReviewThread` workflow attached to the pending review `node_id`; the simple REST review `comments` array can fail to render an applyable Suggested change, and the REST pull request comments endpoint will publish immediately
 
 ### Step 6: Submit Only When Asked
 

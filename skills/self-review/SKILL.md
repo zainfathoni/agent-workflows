@@ -16,6 +16,7 @@ Suggested slash command: `/self-review <pr-number-or-url>`
 - Reconcile any existing current-user PENDING review only after independent findings are complete.
 - Do **not** submit the review unless the user explicitly instructs you to submit it as `APPROVE`, `COMMENT`, or `REQUEST_CHANGES`.
 - `PENDING` is not a valid submission event. To keep a review pending, omit the `event` field entirely.
+- Never use `POST /repos/{owner}/{repo}/pulls/<pr-number>/comments` when the goal is a pending review comment; that endpoint immediately publishes a `COMMENTED` review.
 
 ## Arguments
 
@@ -76,6 +77,8 @@ Suggested slash command: `/self-review <pr-number-or-url>`
 
    This is the default action. Unless the user explicitly asks to submit the review, omit `event` and leave the review pending. If replacing an existing pending review, use the complete reconciled comment set.
 
+   For normal pending inline comments, create the pending review with a `comments` array:
+
    ```bash
    # For a PENDING (draft) review - omit "event" field
    cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --method POST --input -
@@ -97,6 +100,36 @@ Suggested slash command: `/self-review <pr-number-or-url>`
    EOF
 
     # Only add "event": "COMMENT", "APPROVE", or "REQUEST_CHANGES" when the user explicitly asks to submit the review
+   ```
+
+   If comments contain GitHub ````suggestion` blocks and must render as Suggested change widgets, create the pending review shell first, then add line-anchored threads with GraphQL `addPullRequestReviewThread` using the pending review's `node_id`. The REST review `comments` array can store comments as legacy `position` comments, which may not render as applyable suggestions. Do **not** fall back to the REST pull request comments endpoint; it publishes immediately.
+
+   ```bash
+   # 1. Create a pending review shell; omit "event".
+   review_json=$(cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --method POST --input -
+   {
+     "body": "Summary of the pending review"
+   }
+   EOF
+   )
+   review_node=$(echo "$review_json" | jq -r .node_id)
+
+   # 2. Add a pending, line-anchored suggested-change thread to that review.
+   body=$(cat <<'EOF'
+   **Functional regression:** concise explanation.
+
+   ```suggestion
+   replacement code for the commented line
+   ```
+   EOF
+   )
+
+   gh api graphql \
+     -f query='mutation($review: ID!, $path: String!, $line: Int!, $body: String!) { addPullRequestReviewThread(input: { pullRequestReviewId: $review, path: $path, line: $line, side: RIGHT, body: $body }) { thread { comments(first: 1) { nodes { databaseId pullRequestReview { databaseId state } } } } } }' \
+     -f review="$review_node" \
+     -f path="path/to/file.js" \
+     -F line=42 \
+     -f body="$body"
    ```
 
 6. **Manage pending reviews carefully**
@@ -210,4 +243,6 @@ Please hydrate the selected view without applying the interactive pagination res
 - The `{owner}/{repo}` placeholders are auto-resolved by `gh` CLI
 - GitHub rejects a second pending review on the same PR from the same user
 - If you need to add or revise draft inline comments, replace the pending review instead of trying to stack another pending review
+- `POST /repos/{owner}/{repo}/pulls/<pr-number>/comments` is for publishing pull request review comments, not drafting pending review comments; using it creates visible `COMMENTED` reviews.
+- For pending comments that contain ````suggestion` blocks, prefer GraphQL `addPullRequestReviewThread` attached to the pending review `node_id` so GitHub renders them as Suggested change widgets while keeping them pending.
 - Unless the user explicitly says to submit the review, leave it pending after posting inline comments
