@@ -33,6 +33,8 @@ When the `inquiry` select fields are used, omit any free-text format example ent
 
 If a free-text fallback is unavoidable (non-Tycho context), construct the example so at least one position deliberately differs from the correct answer.
 
-## Option shuffling
+## Option shuffling and answer position
 
-Shuffle option order between quiz attempts so a previously-seen or leaked answer pattern does not transfer to a retry.
+- **Never anchor the correct option in the same position.** Do not place the key first (or any fixed slot) across the questions of a quiz. A constant position is itself a leak — the learner can pass by pattern, and the score proves nothing. Before sending a multi-question quiz, deliberately scatter the correct options across positions.
+- Shuffle option order between quiz attempts so a previously-seen or leaked answer pattern does not transfer to a retry.
+- This is distinct from the `AskUserQuestion` tool's "put the recommended option first" convention, which applies only to **recommendation** prompts. In an **assessment** quiz there is no recommended option to surface — keep the two uses separate.
