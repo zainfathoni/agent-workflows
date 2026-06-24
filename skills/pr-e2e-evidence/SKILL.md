@@ -1,36 +1,36 @@
 ---
 name: pr-e2e-evidence
-description: Runs repo-agnostic PR QA evidence flow from PR creation through dev/preview/staging E2E, manual browser verification, before/after screenshots, Playwright report screenshots, and PR description updates. Use when asked to create a PR with E2E evidence, attach dev or staging results, capture report or browser screenshots, wait for deployment, compare baseline vs candidate, or update PR descriptions with collapsible QA sections.
+description: Runs repo-agnostic PR E2E evidence flow from PR creation through dev/preview/staging browser verification, before/after screenshots, and PR description updates. Use when asked to create a PR with E2E evidence, attach dev or staging browser evidence, capture browser screenshots, wait for deployment, compare baseline vs candidate, or update PR descriptions with collapsible QA sections.
 ---
 
 # PR E2E Evidence
 
 ## Quick Start
 
-Use after implementation is ready and the user wants PR QA evidence: create a PR if missing, discover the repo's relevant test and deployment conventions, run the appropriate automated or manual checks, capture evidence screenshots, draft the results under `docs/tests/` with embedded screenshots by default, upload the final evidence to the GitHub PR, wait for deployment when needed, capture deployed evidence, update the draft and PR again, then stop any temporary report servers.
+Use after implementation is ready and the user wants PR E2E evidence: create a PR if missing, discover the repo's relevant PR and deployment conventions, exercise the affected browser workflow, capture evidence screenshots, draft the evidence under `docs/tests/` with embedded screenshots by default, upload the final evidence to the GitHub PR, wait for deployment when needed, capture deployed browser evidence, update the draft and PR again, then clean up any temporary browser/evidence helpers.
 
-Evidence can be either:
-- Automated E2E, such as command output and report screenshots.
-- Manual browser verification, such as Chrome or Browser screenshots, console/network notes, and baseline-vs-candidate comparisons.
+Evidence should be browser-facing:
+- Dev, preview, or staging Chrome/browser verification.
+- Before/after screenshots, focused after-only screenshots, console/network notes, and baseline-vs-candidate comparisons.
+- Avoid duplicating non-browser implementation verification in the PR evidence unless the user explicitly asks for it.
 
 Default draft evidence location:
 - Use `docs/tests/<platform>-<id>/` as the working area for drafting PR evidence unless the repository already has a more specific documented convention. Examples: `docs/tests/github-123/`, `docs/tests/linear-ABC-123/`, or `docs/tests/jira-PROJ-123/`.
 - Store the draft Markdown at `docs/tests/<platform>-<id>/<file>.md`.
 - Store draft screenshots in the same `docs/tests/<platform>-<id>/` area, preferably in a sibling assets directory or a subdirectory named after the draft document.
-- Embed screenshots in the Markdown draft with relative paths so the evidence can be reviewed locally, for example `![Dev E2E Playwright report](./<assets-dir>/dev-e2e-playwright-report-full.png)`.
+- Embed screenshots in the Markdown draft with relative paths so the evidence can be reviewed locally, for example `![Dev booking save evidence](./<assets-dir>/dev-booking-save.png)`.
 - Treat the `docs/tests/<platform>-<id>/<file>.md` document as an intermediary artifact for composing the final PR evidence. The final evidence belongs in the actual GitHub PR description or PR attachments, not only in `docs/tests/`.
 - Unless the user asks to commit the draft evidence, remove or leave uncommitted any temporary `docs/tests/<platform>-<id>/` draft files after the PR has been updated.
 
 ## Repo Discovery
 
-Before running checks, inspect the repository for local conventions:
+Before collecting evidence, inspect the repository for local conventions:
 
-- Test commands in `package.json`, task files, CI workflows, Makefiles, docs, or project instructions.
-- PR template sections and expected placement for test evidence.
+- PR template sections and expected placement for E2E evidence.
 - Deployment environments such as local dev, preview, staging, production baseline, or other named environments.
 - Browser surfaces, route paths, user roles, tenant/account setup, feature flags, and data fixtures needed for reliable evidence.
 
-If the relevant command, environment, or surface is unclear, ask the user before collecting evidence.
+If the relevant environment or browser surface is unclear, ask the user before collecting evidence.
 
 ## PR Creation
 
@@ -39,40 +39,20 @@ If the relevant command, environment, or surface is unclear, ask the user before
 - If missing, create the PR with the repository's PR template preserved.
 - Use `gh pr edit` for description updates.
 
-## Dev Or Preview E2E
+## Dev Or Preview E2E Browser Evidence
 
-Run the affected specs only unless the user asks for the entire suite.
+Exercise the affected user workflow in the closest relevant browser environment: local dev, preview, staging, or a production baseline plus candidate deployment. Capture the state that proves the behavior, preferably at the decision point before the action and the resulting state after the action.
 
-```bash
-<e2e-command> <affected-specs>
-```
-
-Record environment, exact command, result line, and failures/retries if any.
-
-## Playwright Report Screenshot
-
-If the repo uses Playwright HTML reports, serve the latest report with the repo's command. A common command is:
-
-```bash
-PLAYWRIGHT_HTML_OPEN=never npx playwright show-report --host 127.0.0.1 --port 9323 >/tmp/playwright-report-9323.log 2>&1 &
-```
-
-Capture with the available browser tool: open `http://127.0.0.1:9323`, verify the summary, take a full-page screenshot, not viewport-only, and save it under `docs/tests/<platform>-<id>/` with a descriptive name such as `docs/tests/github-123/dev-e2e-playwright-report-full.png`, `docs/tests/github-123/preview-e2e-playwright-report-full.png`, or `docs/tests/github-123/staging-e2e-playwright-report-full.png`.
-
-Always stop the report server after capture:
-
-```bash
-lsof -ti tcp:9323 | xargs -r kill
-```
+Record environment, route or scenario, selected fixture/data, result, notable console/network observations, and cleanup performed.
 
 ## PR Description Format
 
-Add or update a `## Test results` section in the PR body. Preserve the repository's PR template and place the section near existing checklist, testing, QA, or validation sections when present. By default, first draft the full evidence in a Markdown document at `docs/tests/<platform>-<id>/<file>.md` with screenshots embedded via relative paths, then use that draft to update the actual GitHub PR with the final evidence.
+Add or update a `## E2E evidence` section in the PR body. Preserve the repository's PR template and place the section near existing checklist, QA, or validation sections when present. By default, first draft the full evidence in a Markdown document at `docs/tests/<platform>-<id>/<file>.md` with screenshots embedded via relative paths, then use that draft to update the actual GitHub PR with the final evidence.
 
 Default `docs/tests/` draft document format:
 
 ````md
-# Test results: <PR title or feature>
+# E2E evidence: <PR title or feature>
 
 Environment:
 - Branch: `<branch>`
@@ -83,18 +63,11 @@ Environment:
 
 ## Summary
 
-- `<command or manual check>`: `<result>`
+- `<browser scenario>`: `<result>`
 
 ## Evidence
 
-### Dev E2E result
-
-Command: `<command>`
-Result: `<result>`
-
-![Dev E2E Playwright report](./<assets-dir>/dev-e2e-playwright-report-full.png)
-
-### Manual browser verification
+### Browser verification
 
 Result:
 - `<verified behavior>`
@@ -105,38 +78,41 @@ Console/network notes:
 ![Scenario label](./<assets-dir>/<scenario-screenshot>.png)
 ````
 
-Use a stable, descriptive path such as `docs/tests/github-123/test-results.md`, `docs/tests/linear-ABC-123/test-results.md`, or `docs/tests/jira-PROJ-123/test-results.md`. After the draft is complete, upload or embed the screenshots in the GitHub PR and copy the relevant Markdown into the PR body. Do not leave the PR pointing only to local draft evidence unless the repository explicitly expects committed evidence documents.
+Use a stable, descriptive path such as `docs/tests/github-123/e2e-evidence.md`, `docs/tests/linear-ABC-123/e2e-evidence.md`, or `docs/tests/jira-PROJ-123/e2e-evidence.md`. After the draft is complete, upload or embed the screenshots in the GitHub PR and copy the relevant Markdown into the PR body. Do not leave the PR pointing only to local draft evidence unless the repository explicitly expects committed evidence documents.
 
-For E2E evidence:
+For E2E browser evidence:
 
 ````md
-## Test results
+## E2E evidence
 
 <details>
-<summary>Dev E2E result</summary>
+<summary>Dev browser verification</summary>
 
 Passed on dev.
 
-Command: `<command>`
-Result: `<result>`
-Screenshot: <uploaded or embedded in the GitHub PR; drafted first in `docs/tests/<platform>-<id>/<file>.md`>
+Result:
+- `<verified behavior>`
+
+Screenshots:
+- `<scenario label>`:
+  <uploaded or embedded in the GitHub PR; drafted first in `docs/tests/<platform>-<id>/<file>.md`>
 
 </details>
 
 <details>
-<summary>Staging E2E result</summary>
+<summary>Staging browser verification</summary>
 
 Pending staging deployment.
 
 </details>
 ````
 
-After staging or preview deployment is ready, replace pending text with command, result, and screenshot reference.
+After staging or preview deployment is ready, replace pending text with result and screenshot reference.
 
-For manual browser verification evidence, use the same `## Test results` placement and use a summary that names the evidence type:
+For manual browser verification evidence, use the same `## E2E evidence` placement and use a summary that names the evidence type:
 
 ````md
-## Test results
+## E2E evidence
 
 <details>
 <summary>Manual browser verification evidence</summary>
@@ -216,35 +192,27 @@ Focused evidence:
 
 ## Deployed E2E
 
-After the relevant deployment is ready, run the repo's deployed-environment command, for example:
-
-```bash
-<staging-or-preview-e2e-command> <affected-staging-or-preview-specs>
-```
-
-Use the environment and test project that the repository supports. If a surface is unavailable in one environment, choose the closest supported equivalent and explain the difference in the PR evidence.
+After the relevant deployment is ready, repeat the browser workflow in the deployed environment. If a surface is unavailable in one environment, choose the closest supported equivalent and explain the difference in the PR evidence.
 
 ## Checklist
 
 - [ ] Existing PR checked or new PR created.
-- [ ] Repo-local test command, PR template, and deployment conventions discovered.
-- [ ] Relevant dev or preview evidence captured: automated E2E result, manual browser run, or both.
-- [ ] Playwright full-page report screenshot captured when automated E2E is used and a report is available.
-- [ ] Browser screenshots captured when manual verification is used.
-- [ ] Test results drafted at `docs/tests/<platform>-<id>/<file>.md` unless the repository has a more specific documented convention.
+- [ ] PR template and deployment conventions discovered.
+- [ ] Relevant dev or preview browser evidence captured.
+- [ ] Browser screenshots captured.
+- [ ] E2E evidence drafted at `docs/tests/<platform>-<id>/<file>.md` unless the repository has a more specific documented convention.
 - [ ] Evidence screenshots stored under `docs/tests/<platform>-<id>/` and embedded in the draft with relative paths.
 - [ ] Final evidence screenshots uploaded or embedded in the actual GitHub PR.
 - [ ] Evidence screenshots copied to an upload-ready directory when user will attach manually.
-- [ ] PR description updated with `## Test results` near the repository's existing testing or checklist sections.
-- [ ] PR description updated with `<details><summary>Dev E2E result</summary>` or a more accurate environment label.
+- [ ] PR description updated with `## E2E evidence` near the repository's existing QA or checklist sections.
+- [ ] PR description updated with `<details><summary>Dev browser verification</summary>` or a more accurate environment label.
 - [ ] Deployment readiness confirmed when deployed evidence is needed.
-- [ ] Relevant deployed-environment evidence captured: automated E2E result, manual browser run, or both.
-- [ ] Deployed Playwright full-page report screenshot captured when automated E2E is used and a report is available.
+- [ ] Relevant deployed-environment browser evidence captured.
 - [ ] Baseline and candidate URLs identified when before/after evidence is used.
 - [ ] Matching baseline and candidate screenshots captured.
 - [ ] Before/after screenshots combined into paired images.
 - [ ] User uploaded screenshots to GitHub PR description when manual upload is required, or agent uploaded/embedded them when possible.
 - [ ] PR description updated with route paths or scenario labels and explanations for each screenshot.
 - [ ] Any after-only or non-parity screenshots are clearly labeled.
-- [ ] PR description updated with deployed-environment results when required.
-- [ ] Temporary report servers stopped with `lsof -ti tcp:9323 | xargs -r kill` or the appropriate port cleanup command.
+- [ ] PR description updated with deployed-environment evidence when required.
+- [ ] Temporary browser/evidence helpers stopped or cleaned up.
