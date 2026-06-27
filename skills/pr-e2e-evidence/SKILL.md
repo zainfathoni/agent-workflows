@@ -80,6 +80,46 @@ Console/network notes:
 
 Use a stable, descriptive path such as `docs/tests/github-123/e2e-evidence.md`, `docs/tests/linear-ABC-123/e2e-evidence.md`, or `docs/tests/jira-PROJ-123/e2e-evidence.md`. After the draft is complete, upload or embed the screenshots in the GitHub PR and copy the relevant Markdown into the PR body. Do not leave the PR pointing only to local draft evidence unless the repository explicitly expects committed evidence documents.
 
+### Uploading screenshots to GitHub-hosted attachments
+
+When the user wants the agent to attach screenshots directly to a GitHub PR or issue, prefer GitHub-hosted attachment URLs over repository raw URLs. `raw.githubusercontent.com` links from a separate notes/assets repository may not render reliably in PR conversations. GitHub-hosted attachment URLs look like:
+
+```md
+![Scenario label](https://github.com/user-attachments/assets/<uuid>)
+```
+
+Use this browser-based upload flow when Chrome DevTools is available and the browser is logged in to GitHub:
+
+1. Open the PR or issue conversation in the browser.
+2. Scroll to the comment editor.
+3. Use the editor's "Paste, drop, or click to add files" / attachment target to upload each local screenshot.
+4. Wait for each placeholder such as `![Uploading screenshot.png…]()` to become a completed Markdown or HTML embed containing `https://github.com/user-attachments/assets/...`.
+5. Extract the inserted attachment URLs from the editor text.
+6. Replace the upload dump with a structured evidence comment that groups screenshots by scenario/role/surface.
+7. Submit the final comment.
+8. If an earlier comment used non-rendering raw URLs, edit it to say it is superseded and link to the rendered attachment-hosted comment.
+
+Practical DevTools pattern:
+
+```text
+upload_file(uid=<attachment drop target>, filePath=<local screenshot>)
+wait until the editor text contains `user-attachments` and no longer contains `Uploading`
+repeat for each screenshot
+read the editor text and map alt text / filename to attachment URL
+replace the editor value with the final grouped Markdown comment
+click Comment
+```
+
+For many screenshots, upload one at a time or in small batches. After each upload, verify the count of `user-attachments` URLs increased before starting the next upload. This avoids losing track of failed, slow, or still-pending uploads.
+
+If browser upload is unavailable, optional fallbacks are:
+
+- Ask the user to upload the files manually and provide the rendered Markdown/URLs.
+- Use a CLI helper such as `gh image` / `gh-image` only if it is already installed or acceptable to install, and only if it can access a valid GitHub browser session token.
+- Use an external public image host only when the user explicitly accepts that visibility and durability tradeoff.
+
+Do not treat screenshots committed to `docs/tests/` or a notes repository as final PR evidence unless the PR comment/body embeds renderable image URLs.
+
 For E2E browser evidence:
 
 ````md
@@ -203,6 +243,8 @@ After the relevant deployment is ready, repeat the browser workflow in the deplo
 - [ ] E2E evidence drafted at `docs/tests/<platform>-<id>/<file>.md` unless the repository has a more specific documented convention.
 - [ ] Evidence screenshots stored under `docs/tests/<platform>-<id>/` and embedded in the draft with relative paths.
 - [ ] Final evidence screenshots uploaded or embedded in the actual GitHub PR.
+- [ ] GitHub-hosted attachment URLs (`github.com/user-attachments/assets/...`) used when the user wants agent-uploaded screenshots in a GitHub PR/issue.
+- [ ] Each uploaded screenshot verified to have completed from `Uploading...` placeholder to a stable attachment URL before submitting the PR comment.
 - [ ] Evidence screenshots copied to an upload-ready directory when user will attach manually.
 - [ ] PR description updated with `## E2E evidence` near the repository's existing QA or checklist sections.
 - [ ] PR description updated with `<details><summary>Dev browser verification</summary>` or a more accurate environment label.
@@ -215,4 +257,5 @@ After the relevant deployment is ready, repeat the browser workflow in the deplo
 - [ ] PR description updated with route paths or scenario labels and explanations for each screenshot.
 - [ ] Any after-only or non-parity screenshots are clearly labeled.
 - [ ] PR description updated with deployed-environment evidence when required.
+- [ ] Any earlier broken/raw-link evidence comment marked as superseded and linked to the rendered attachment-hosted evidence.
 - [ ] Temporary browser/evidence helpers stopped or cleaned up.
