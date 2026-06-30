@@ -12,6 +12,7 @@ Use after implementation is ready and the user wants PR E2E evidence: create a P
 Evidence should be browser-facing:
 - Dev, preview, or staging Chrome/browser verification.
 - Before/after screenshots, focused after-only screenshots, console/network notes, and baseline-vs-candidate comparisons.
+- Cropped and combined interaction evidence by default: show the meaningful UI before the user action and the meaningful result after the action in one annotated image whenever that tells the story better than separate screenshots.
 - Avoid duplicating non-browser implementation verification in the PR evidence unless the user explicitly asks for it.
 
 Default draft evidence location:
@@ -132,6 +133,10 @@ Do:
 - Ground the browser surface before claiming coverage. If a customer reports a Calendar widget, verify whether the live page is the app-proxy Calendar page, an embedded React/xcomponent Calendar widget, an Upcoming Event widget, or a different storefront surface.
 - Use the closest matching deployed route for staging/preview evidence. For example, staging Shopify app proxies may use a different path prefix than production, such as `/apps/bookthatapp-staging` instead of `/apps/bookthatapp`; discover and record that difference.
 - Capture the interaction mode that matches the report. If the bug occurs in list view, include list-view evidence even if month-view evidence also passes.
+- Crop screenshots to the important UI before uploading final evidence. Keep enough context to identify the store/page/widget, but remove long blank areas, unrelated product grids, footers, repeated storefront content, and off-screen whitespace.
+- Merge related before/after interaction screenshots into one annotated composite by default. For click-through evidence, pair “before: actionable link/control visible” with “after: expected destination/result visible.”
+- Annotate composites with clear labels such as `Before: event link visible` and `After: product page opened`, plus a short title naming the environment and widget/surface. Use borders or headers that clarify the story without obscuring UI content.
+- If a raw screenshot was captured too early, too late, or while a widget was still loading, recapture or crop from a correct state before using it. Do not upload evidence that visually contradicts the stated result.
 - Include enough route/data context in the PR body for reviewers to reproduce the evidence: store, environment, path, fixture/event/product name, selected date/filter, and target URL after click.
 - Note unrelated console/network noise separately instead of hiding it. State whether it blocked the scenario or was outside the behavior under test.
 - Keep local draft evidence and annotated screenshots useful for review, but treat them as source material for the PR body, not as the final artifact.
@@ -144,6 +149,9 @@ Don't:
 - Don't assume the homepage has the same widgets across dev, staging, and production. If the requested storefront lacks the widget, use a documented app-proxy/admin-preview route or explain the closest available equivalent.
 - Don't mark a production issue as addressed solely because a related widget passes. Confirm the exact reported widget path or explicitly document which surface remains unverified.
 - Don't conflate navigation success with downstream product-widget health. A product-page reservation/checking error after navigation can be unrelated to a Calendar link-click fix; record it separately.
+- Don't upload tall full-page screenshots when a compact crop or composite would be clearer. Full-page screenshots are useful as raw source material, not usually as final PR evidence.
+- Don't upload separate before and after screenshots when they only make sense as one interaction. Combine them first, then upload the composite.
+- Don't add callout boxes or labels that are cropped away, hidden below the fold, or too far from the relevant UI. Inspect the final composite before uploading.
 
 For E2E browser evidence:
 
@@ -208,6 +216,8 @@ Screenshots:
 
 Use this when the PR needs visual regression-style evidence across a baseline environment and a candidate environment.
 
+Also use this pattern for single-environment interaction evidence. In that case “before” is the state immediately before the user action, and “after” is the resulting page/state after the action. Examples: widget event link before click → product page after click; form before save → success state after save; browser Back returns to listing → second click opens destination.
+
 Process:
 
 1. Capture matching baseline and candidate screenshots for each route or scenario.
@@ -215,17 +225,27 @@ Process:
    - Use the PR, dev, preview, or staging deployment as the after candidate.
    - Keep viewport, scroll position, filters, date ranges, selected records, account, role, feature flags, and relevant UI mode as similar as practical.
    - If exact parity is impossible, note the reason in the PR description.
-2. Combine each before/after pair into one image.
+2. Crop each source screenshot to the important section before final upload.
+   - Keep page/store/widget identity when it helps reviewers trust the evidence.
+   - Remove unrelated storefront sections, footers, product grids, blank space, browser chrome, and repeated content.
+   - If the interesting part spans a tall widget, crop to the relevant control/event row and enough surrounding context to identify it.
+   - If the crop reveals the wrong state, such as `Loading...` or `No events` when the result claims an event link was clicked, recapture the screenshot instead of forcing the crop.
+3. Combine each before/after pair into one image.
    - Left side: `Before: <baseline environment>`.
    - Right side: `After: <candidate environment>`.
    - Include the page or scenario title in the image.
-   - Do not add highlights unless the user explicitly asks; highlights can obscure the UI evidence.
-3. Move draft screenshots into the `docs/tests/<platform>-<id>/` evidence directory by default.
+   - For interaction evidence, use action-oriented labels such as `Before: event link visible` and `After: product page opened`.
+   - Add a short note in the composite if the widget was mounted through a documented injected container, uses staging-only fixture data, or differs from the customer page.
+   - Prefer unobtrusive headers, borders, and arrows over heavy highlights. Highlights are okay when they clarify the exact clicked element, but must not obscure text or controls.
+4. Inspect the final composite before upload.
+   - Verify it shows the claimed before state, claimed after state, relevant labels, and no misleading stale/loading state.
+   - Prefer uploading the composite to the PR body. Keep raw full-size screenshots local as source material unless the user asks for them.
+5. Move draft screenshots into the `docs/tests/<platform>-<id>/` evidence directory by default.
    - Use descriptive filenames, for example `<ticket-or-pr>-<date>-<route-or-scenario>-before-after.png`.
    - Embed each screenshot in the corresponding `docs/tests/<platform>-<id>/<file>.md` draft with a relative path.
    - Upload the final screenshots to the PR description or PR attachments before considering the evidence complete.
    - Tell the user which files to upload to the PR description when manual upload is required.
-4. After the screenshots are uploaded to the PR, update the PR description.
+6. After the screenshots are uploaded to the PR, update the PR description.
    - Group screenshots by surface area or scenario, not upload order.
    - Add the corresponding route path or scenario above each image.
    - Explain what each screenshot demonstrates.
@@ -281,7 +301,9 @@ For post-production deployment evidence after the PR is merged, a PR comment is 
 - [ ] Relevant deployed-environment browser evidence captured.
 - [ ] Baseline and candidate URLs identified when before/after evidence is used.
 - [ ] Matching baseline and candidate screenshots captured.
-- [ ] Before/after screenshots combined into paired images.
+- [ ] Source screenshots cropped to the meaningful UI before final upload.
+- [ ] Before/after interaction screenshots combined into paired annotated images when that is clearer than separate screenshots.
+- [ ] Final combined/annotated screenshots inspected for stale loading states, misleading crops, hidden labels, and excessive unrelated page content.
 - [ ] User uploaded screenshots to GitHub PR description when manual upload is required, or agent uploaded/embedded them when possible.
 - [ ] PR description updated with route paths or scenario labels and explanations for each screenshot.
 - [ ] Any after-only or non-parity screenshots are clearly labeled.
