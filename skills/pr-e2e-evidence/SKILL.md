@@ -49,6 +49,8 @@ Record environment, route or scenario, selected fixture/data, result, notable co
 
 Add or update a `## E2E evidence` section in the PR body. Preserve the repository's PR template and place the section near existing checklist, QA, or validation sections when present. By default, first draft the full evidence in a Markdown document at `docs/tests/<platform>-<id>/<file>.md` with screenshots embedded via relative paths, then use that draft to update the actual GitHub PR with the final evidence.
 
+Default to putting pre-merge evidence in the PR description, not in a PR comment. The PR body is the review artifact while the PR is still open. Comments are appropriate for post-production deployment evidence after the PR has already been merged, when the comment serves as a deployment follow-up record rather than review evidence. Comments are also acceptable when the repository convention or user explicitly asks for a comment, or when the PR body is not editable. If the comment editor is used only as GitHub's attachment uploader, extract the `user-attachments` URLs, clear the editor, and do not submit the comment.
+
 Default `docs/tests/` draft document format:
 
 ````md
@@ -88,16 +90,18 @@ When the user wants the agent to attach screenshots directly to a GitHub PR or i
 ![Scenario label](https://github.com/user-attachments/assets/<uuid>)
 ```
 
-Use this browser-based upload flow when Chrome DevTools is available and the browser is logged in to GitHub:
+Use this browser-based upload flow when Chrome DevTools is available and the browser is logged in to GitHub. The default pre-merge target is the PR body, with the comment editor used only as an attachment URL generator:
 
 1. Open the PR or issue conversation in the browser.
 2. Scroll to the comment editor.
 3. Use the editor's "Paste, drop, or click to add files" / attachment target to upload each local screenshot.
 4. Wait for each placeholder such as `![Uploading screenshot.png…]()` to become a completed Markdown or HTML embed containing `https://github.com/user-attachments/assets/...`.
 5. Extract the inserted attachment URLs from the editor text.
-6. Replace the upload dump with a structured evidence comment that groups screenshots by scenario/role/surface.
-7. Submit the final comment.
-8. If an earlier comment used non-rendering raw URLs, edit it to say it is superseded and link to the rendered attachment-hosted comment.
+6. Clear the comment editor and verify the PR comment button is disabled or the editor is empty.
+7. Add the uploaded attachment URLs to the structured `## E2E evidence` section in the PR body with `gh pr edit --body-file` or the browser edit UI.
+8. Verify the PR body contains the new `user-attachments` URLs and that no new PR comment was posted.
+
+Only submit a PR comment when that is intentionally the final evidence location. The common intentional case is post-production deployment evidence after the PR is merged. If an earlier comment used non-rendering raw URLs, prefer deleting it when redundant and authored by you; otherwise edit it to say it is superseded and link to the rendered attachment-hosted evidence.
 
 Practical DevTools pattern:
 
@@ -106,8 +110,9 @@ upload_file(uid=<attachment drop target>, filePath=<local screenshot>)
 wait until the editor text contains `user-attachments` and no longer contains `Uploading`
 repeat for each screenshot
 read the editor text and map alt text / filename to attachment URL
-replace the editor value with the final grouped Markdown comment
-click Comment
+clear the editor value and dispatch input/change events
+update the PR body with the final grouped Markdown evidence
+verify comment count did not increase
 ```
 
 For many screenshots, upload one at a time or in small batches. After each upload, verify the count of `user-attachments` URLs increased before starting the next upload. This avoids losing track of failed, slow, or still-pending uploads.
@@ -119,6 +124,26 @@ If browser upload is unavailable, optional fallbacks are:
 - Use an external public image host only when the user explicitly accepts that visibility and durability tradeoff.
 
 Do not treat screenshots committed to `docs/tests/` or a notes repository as final PR evidence unless the PR comment/body embeds renderable image URLs.
+
+### Evidence Dos and Don'ts
+
+Do:
+
+- Ground the browser surface before claiming coverage. If a customer reports a Calendar widget, verify whether the live page is the app-proxy Calendar page, an embedded React/xcomponent Calendar widget, an Upcoming Event widget, or a different storefront surface.
+- Use the closest matching deployed route for staging/preview evidence. For example, staging Shopify app proxies may use a different path prefix than production, such as `/apps/bookthatapp-staging` instead of `/apps/bookthatapp`; discover and record that difference.
+- Capture the interaction mode that matches the report. If the bug occurs in list view, include list-view evidence even if month-view evidence also passes.
+- Include enough route/data context in the PR body for reviewers to reproduce the evidence: store, environment, path, fixture/event/product name, selected date/filter, and target URL after click.
+- Note unrelated console/network noise separately instead of hiding it. State whether it blocked the scenario or was outside the behavior under test.
+- Keep local draft evidence and annotated screenshots useful for review, but treat them as source material for the PR body, not as the final artifact.
+
+Don't:
+
+- Don't leave a PR comment just to get GitHub attachment URLs. Upload through the comment box if needed, extract the URLs, clear the editor, and put the evidence in the PR description by default.
+- Don't use PR comments for normal pre-merge review evidence unless explicitly requested. Save comments for post-production deployment evidence after merge, repository convention, or body-not-editable cases.
+- Don't use public upload helpers or image hosts when the user asks for Chrome/GitHub attachment uploads or when visibility matters.
+- Don't assume the homepage has the same widgets across dev, staging, and production. If the requested storefront lacks the widget, use a documented app-proxy/admin-preview route or explain the closest available equivalent.
+- Don't mark a production issue as addressed solely because a related widget passes. Confirm the exact reported widget path or explicitly document which surface remains unverified.
+- Don't conflate navigation success with downstream product-widget health. A product-page reservation/checking error after navigation can be unrelated to a Calendar link-click fix; record it separately.
 
 For E2E browser evidence:
 
@@ -234,6 +259,8 @@ Focused evidence:
 
 After the relevant deployment is ready, repeat the browser workflow in the deployed environment. If a surface is unavailable in one environment, choose the closest supported equivalent and explain the difference in the PR evidence.
 
+For post-production deployment evidence after the PR is merged, a PR comment is acceptable and often preferable: the PR body already served its review purpose, and the comment records the deployed verification chronologically. Still use GitHub-hosted attachments, group screenshots by scenario, include production URLs and console/network notes, and avoid throwaway upload-only comments.
+
 ## Checklist
 
 - [ ] Existing PR checked or new PR created.
@@ -244,7 +271,9 @@ After the relevant deployment is ready, repeat the browser workflow in the deplo
 - [ ] Evidence screenshots stored under `docs/tests/<platform>-<id>/` and embedded in the draft with relative paths.
 - [ ] Final evidence screenshots uploaded or embedded in the actual GitHub PR.
 - [ ] GitHub-hosted attachment URLs (`github.com/user-attachments/assets/...`) used when the user wants agent-uploaded screenshots in a GitHub PR/issue.
-- [ ] Each uploaded screenshot verified to have completed from `Uploading...` placeholder to a stable attachment URL before submitting the PR comment.
+- [ ] Each uploaded screenshot verified to have completed from `Uploading...` placeholder to a stable attachment URL before using it in the PR body or submitting an intentional comment.
+- [ ] Comment editor cleared after attachment upload when the PR body is the final evidence location.
+- [ ] PR comment count checked when the user asked for PR-body evidence or no redundant comments.
 - [ ] Evidence screenshots copied to an upload-ready directory when user will attach manually.
 - [ ] PR description updated with `## E2E evidence` near the repository's existing QA or checklist sections.
 - [ ] PR description updated with `<details><summary>Dev browser verification</summary>` or a more accurate environment label.
@@ -257,5 +286,6 @@ After the relevant deployment is ready, repeat the browser workflow in the deplo
 - [ ] PR description updated with route paths or scenario labels and explanations for each screenshot.
 - [ ] Any after-only or non-parity screenshots are clearly labeled.
 - [ ] PR description updated with deployed-environment evidence when required.
+- [ ] Post-production deployment evidence posted as an intentional PR comment only after merge, when applicable.
 - [ ] Any earlier broken/raw-link evidence comment marked as superseded and linked to the rendered attachment-hosted evidence.
 - [ ] Temporary browser/evidence helpers stopped or cleaned up.
