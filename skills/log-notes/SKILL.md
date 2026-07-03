@@ -1,85 +1,52 @@
 ---
 name: log-notes
-description: "Logs agent work into the user's iCloud Obsidian daily notes and relevant topical/project notes. Use when asked to log actions, document a session, update notes, capture what changed, or write durable context in Obsidian."
+description: "Logs agent work into the user's iCloud Obsidian daily notes and durable topical/project notes. Use when asked to log actions, document a session, update notes, or capture reusable context."
 ---
 
 # Log Notes
 
-Capture agent work as concise, durable context in the user's iCloud-synced Obsidian vault.
+Capture agent work in the user's iCloud Obsidian vault: daily notes keep the session trail; topical notes keep durable knowledge.
 
-Vault root:
+Vault paths:
 
 ```text
 /Users/zain/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-notes/
-```
-
-Daily notes live under:
-
-```text
 /Users/zain/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-notes/log/daily/
 ```
-
-Logging is not only a daily transcript. Daily notes own the session trail; topical/project notes own durable reusable knowledge where a future agent or the user would naturally look for it.
 
 ## Workflow
 
 1. Identify all target notes.
-   - Use `/Users/zain/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-notes/log/daily/YYYY-MM-DD.md` for the session log when the user asks to log completed work.
-   - Also update every relevant non-periodic topical/project note in the Obsidian vault that should own the durable concept, fact, decision, state change, restore detail, or follow-up.
-   - If no topical note exists and the outcome is durable enough to preserve outside the daily log, create the smallest appropriate non-periodic topic note and link it from the nearest index/status note.
+   - Use `log/daily/YYYY-MM-DD.md` for completed-work session logs.
+   - Also update topical/project notes that own durable facts, decisions, restore details, current state, or follow-ups.
+   - Search before creating topical notes; prefer an existing owner note. Create one only when the outcome needs a durable home.
 2. Read each target note before editing it.
-3. Append or update the smallest relevant section instead of rewriting unrelated content.
-4. Use Obsidian wikilinks for existing notes, for example `[[mac/lid-and-suspend]]`.
-5. Include the right level of detail for the note type:
-   - problem or request
-   - key findings
-   - files changed
-   - validation performed
-   - remaining follow-ups or cautions
-6. Avoid noisy transcripts, command dumps, and internal tool details unless the command/result is needed for future restoration.
-7. Cross-link the daily entry and topical note when it helps future navigation.
-8. Do not commit or push the notes. This vault path is iCloud-synced rather than git-tracked.
+3. Append or update the smallest relevant section; preserve unrelated content and local style.
+4. Record only useful future context: request, finding/result, changed files/systems, validation, follow-ups or cautions.
+5. Cross-link daily and topical notes with Obsidian wikilinks when it helps navigation.
+6. Do not commit or push the vault; it is iCloud-synced.
 
-## Separating daily and topical notes
+## Daily vs topical
 
-- Daily notes should own session-specific investigation history, drafts, Slack/Zendesk reply wording, timestamps, detailed source context, and one-off support or deployment narration.
-- Topical/project notes should own only durable reusable knowledge: stable implementation facts, decisions, operating rules, gotchas, restore details, and current system behavior.
-- Do not copy full daily-note sections into topical notes. If a topical note needs provenance, summarize the durable lesson and link back to the relevant daily section with an Obsidian wikilink.
-- Use embeds/transclusion sparingly; topical notes get noisy when they render many dated conversations.
-- If topical content starts reading like a transcript, PR/deployment log, or reply draft, keep that detail in the daily note and move only the durable takeaway into the topical note.
+- Daily notes own session history, drafts, timestamps, one-off support/deployment narration, and detailed source context.
+- Topical/project notes own reusable knowledge: stable facts, decisions, operating rules, gotchas, restore details, and current state.
+- Do not copy daily sections into topical notes. Summarize the durable lesson and link back if provenance matters.
 
-## Choosing non-periodic topical notes
+## When to update topical notes
 
-Always consider whether the work belongs in one or more non-periodic notes outside `log/daily/`. Update a topical note when any of these are true:
+Update a non-periodic note outside `log/daily/` when the work:
 
-- The work changes current system/project state.
-- The result affects future restoration, debugging, or setup.
-- A deferred action was resolved, narrowed, or added.
-- The user made a decision that should outlive the session.
-- The finding belongs to an existing topic map, project page, concept note, checklist, or status page.
-- The daily entry would otherwise become the only place that explains a reusable concept, troubleshooting path, setup choice, or project state.
+- changes current system/project state
+- affects future restoration, debugging, or setup
+- resolves, narrows, or adds a deferred action
+- records a lasting user decision
+- would otherwise leave reusable knowledge only in the daily note
 
-Search the vault for likely related non-periodic notes before creating a new one. Prefer updating an existing owner note over creating duplicates. Good search terms usually include the project name, tool name, error phrase, concept, and relevant tags from the daily note.
-
-Examples:
-
-- Hardware/system work: update the relevant Mac status, restore, deferred-action, or hardware note if one exists.
-- Tooling/setup work: update the relevant setup/restore note and any status dashboard.
-- Work/project investigations: update the project or concept note when the result changes reusable knowledge or future next steps.
-- A one-off investigation with no lasting outcome and no reusable concept: daily log only is fine.
+A one-off investigation with no lasting outcome can stay daily-only.
 
 ## Daily log format
 
-Preserve the existing format of the target daily note. Today's reliable pattern (`2026-06-15.md`) is:
-
-- YAML frontmatter with `date` and `tags`.
-- `# Weekday, Month D, YYYY` title.
-- Top-level life/work/project areas as `#` headings, for example `# BTA` and `# Side Projects`.
-- Specific work items as `## Short outcome title` under the relevant area.
-- Concise bullets with important links, findings, actions, validation, and result.
-- Optional `Related notes:` block with Obsidian wikilinks when cross-links help navigation.
-
-When appending agent work, use this shape unless the existing daily note clearly uses a different local pattern:
+Preserve the target daily note's existing format. When appending agent work, use this shape unless the note clearly uses a different local pattern:
 
 ```md
 # Relevant Area
@@ -97,11 +64,10 @@ Related notes:
 - [[path/to/non-periodic-note|Readable note title]] — why it is relevant.
 ```
 
-If the target daily note already has the relevant area heading, append the new `##` section there. If not, create the smallest fitting area heading using the note's existing naming style. Do not add empty boilerplate fields.
+If the relevant area heading exists, append the new `##` section there. Otherwise create the smallest fitting area heading. Do not add empty boilerplate fields.
 
 ## Style
 
 - Keep entries brief and skimmable.
 - Prefer concrete paths and commands over vague summaries.
-- Preserve the user's existing note structure and voice.
-- Do not include secrets, tokens, private URLs, or sensitive command output.
+- Avoid transcripts, command dumps, internal tool details, secrets, tokens, and sensitive command output unless needed for future restoration.
