@@ -6,6 +6,7 @@ Preserve these local behaviours unless a grilling decision explicitly retires on
 
 - source-derived workspace directory names for topics tied to hosted sources;
 - reusable `./assets/*` as the default lesson architecture;
+- micro-world simulators and in-page quiz widgets as the default interactivity for mechanism lessons (see LESSON-RULES.md "Micro-worlds");
 - static/offline hosting portability for lesson assets, with no build step or network-only dependencies unless explicitly accepted;
 - per-workspace hosting documentation via `HOSTING.md`;
 - codebase source references with both VS Code deep links and pinned GitHub permalinks;

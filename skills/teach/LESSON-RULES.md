@@ -8,6 +8,8 @@ Start each workspace from [lesson-template.html](./lesson-template.html): seed t
 
 Every lesson should:
 
+- embed a micro-world when the topic is a mechanism (see "Micro-worlds" below);
+- embed an in-page quiz widget (see [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md));
 - be beautiful, readable, and accessible;
 - include viewport metadata and WCAG AA body-text contrast;
 - keep dark callout boxes legible by overriding nested `code`/`pre` colours;
@@ -15,6 +17,16 @@ Every lesson should:
 - link to related lessons and reference docs;
 - recommend one primary high-trust source;
 - remind the user to ask follow-up questions.
+
+## Micro-worlds
+
+When a lesson teaches a mechanism or system (not a pure fact, glossary, or routine), embed a **micro-world**: a small self-contained simulator inside the lesson HTML that lets the learner drive the mechanism and watch consequences form (Papert's "Mathland"; Geoffrey Litt, ["Understanding is the new bottleneck"](https://www.geoffreylitt.com/2026/07/02/understanding-is-the-new-bottleneck.html), 2026-07-02).
+
+- Vanilla inline JS/CSS, working over `file://` like every other asset — no build step, no CDN.
+- The learner manipulates the same variables the real system has (modes, inputs, ordered phases), and the display shows the system's *internal* view — its clusters, queues, decisions — not just the final output.
+- Deterministic by default, so the learner can replay and compare runs; add randomness only when variance is the point.
+- Pair it with a visible "Things to try" prompt naming the contrast the learner should go look for.
+- A mechanism lesson is not done until the target misconception can be both **reproduced and resolved inside the micro-world** — if the simulator can't show the failure and the fix, it is decoration, not a micro-world.
 
 ## Screen-reader and listening support
 

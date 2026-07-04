@@ -6,6 +6,8 @@ Skills need tight feedback loops. Use quizzes, light browser tasks, short real-w
 
 For multiple-choice quizzes, make answer choices the same number of words where possible so formatting does not leak the answer.
 
+Mechanism lessons embed an **in-page quiz widget**: radio options with immediate corrective feedback on submit, no page reload, self-contained over `file://`. All option-position and leak rules below apply to widget quizzes too. Then mirror a *fresh variant* (not the same questions) in chat for grading — the widget builds fluency; only the chat quiz is evidence for a learning record.
+
 ## Tycho inquiry
 
 When running in Tycho and asking the user to answer a quiz or choose a next teaching direction, use the structured final-response `inquiry` object **and** present the questions as plain Markdown in the same reply. The `inquiry` select fields are the preferred answer mechanism, but they may silently fail to render — the Markdown version ensures the learner always sees the quiz.
