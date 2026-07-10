@@ -5,9 +5,9 @@ Reusable personal skills that should be available across projects.
 ## Workflow Skills
 
 - `fizzy` - manage Fizzy boards, cards, steps, comments, reactions, and pins. Card descriptions must be authored as HTML and card relationships must be linked.
+- `sync-skills` - synchronize global skill installations across machines: update upstream skills, clean up deprecated ones, install local-owned shared skills, and verify the result. The single entry point for setting up or auditing any machine.
 - `log-notes` - log completed agent work into iCloud-synced Obsidian daily notes and relevant topical/project notes.
 - `squash-commits` - analyze branch commits and prepare a rebase guide for squashing related work into descriptive commits.
-- `explain-and-quiz` - explain a topic or PR with codebase references, alternatives, and trade-offs, then quiz the user to verify understanding.
 - `pr-e2e-evidence` - collect repo-agnostic PR QA evidence: E2E results, browser verification notes, report screenshots, before/after screenshots, and PR description updates.
 - `creating-bta-worktrees` - create and repair BookThatApp sibling worktrees with matching local branches, shared symlinks, and Docker-safe runtime files.
 - `creating-bta-prs` - rename BookThatApp issue worktree branches to existing BTA conventions, commit and push focused changes, and create GitHub PRs from the repo template.
@@ -20,7 +20,6 @@ When comparing `teach` with upstream, treat upstream as input, not authority: ad
 Use globally installed upstream skills alongside these shared skills. Upstream-tracked skills are installed from Matt Pocock's skills and may accept upstream breaking changes, including renames and removal of deprecated skills.
 
 - `ask-matt` - route to the appropriate upstream user-invoked skill.
-- `grilling` - reusable interview loop for stress-testing plans and designs.
 - `domain-modeling` - maintain durable domain language and ADRs while decisions are made.
 - `grill-with-docs` - user-invoked wrapper that runs `grilling` with `domain-modeling`.
 - `codebase-design` - shared deep-module vocabulary for architecture and interface decisions.
@@ -28,32 +27,46 @@ Use globally installed upstream skills alongside these shared skills. Upstream-t
 - `writing-great-skills` - renamed upstream replacement for `write-a-skill`.
 - `resolving-merge-conflicts` - resolve in-progress git merge or rebase conflicts.
 - `handoff` - compact a long session into a handoff document before switching agents or tasks.
-- `prototype` - build throwaway UI or business-logic spikes before turning decisions into PRDs or issues.
-- `improve-codebase-architecture`, `setup-matt-pocock-skills`, `tdd`, `to-issues`, `to-prd`, and `triage` - upstream engineering workflow skills.
 
-Deprecated upstream skills such as `caveman` and `zoom-out` should remain uninstalled unless they become local-owned skills with explicit documented behavior.
+- `grilling` - reusable interview loop for stress-testing plans and designs. Distinguishes facts (found by exploring the codebase) from decisions (the user must decide), asks one question at a time, and waits for confirmation before enacting any plan.
+- `prototype` - build throwaway logic or UI spikes to raise the fidelity of discussion before committing to a spec. Model-invoked so `/wayfinder` can use it directly.
+- `to-spec` - turn the current conversation into a spec and publish it to the issue tracker. No interview — just synthesizes what you've already discussed. Renamed from `to-prd`.
+- `to-tickets` - break a plan, spec, or conversation into tracer-bullet tickets, each declaring its blocking edges. Works as a local `tickets.md` file or native tracker blocking links. Merged from `to-plan` and `to-issues`.
+- `implement` - build the work described by a spec or set of tickets, driving TDD at pre-agreed seams and closing out with `/code-review` before committing.
+- `wayfinder` - plan a huge chunk of work as a shared map of investigation tickets on the issue tracker — research, grilling, prototype, and task tickets linked with blocking relationships, resolved one at a time until the route is clear.
+- `research` - investigate a question against primary sources and capture findings as a cited Markdown file in the repo, run as a background agent.
+- `code-review` - two-axis review of the diff since a fixed point: Standards (coding standards plus a Fowler refactoring-smell baseline) and Spec (faithfulness to the originating spec or ticket), run as parallel sub-agents.
+- `tdd` - test-driven development reference material: red-green loop with refactoring moved to the code-review phase. Now reference-only so AFK agents can work autonomously.
+- `improve-codebase-architecture`, `setup-matt-pocock-skills`, and `triage` - upstream engineering workflow skills.
+
+Deprecated upstream skills such as `caveman`, `zoom-out`, `to-prd`, `to-issues`, and `to-plan` should remain uninstalled unless they become local-owned skills with explicit documented behavior.
 
 Do not treat prototype code as production code unless a human explicitly promotes it into an implementation task.
 
-Reference: [Skills Changelog v1](https://www.aihero.dev/skills/skills-changelog-v1-announcement).
+The v1.1 lifecycle flow is: Grilling → Spec → Tickets → Implement → Code Review. Start with `/grill-with-docs` (or `/wayfinder` for large plans), generate a spec with `/to-spec`, break it into tickets with `/to-tickets`, implement each ticket with `/implement`, and review with `/code-review`.
+
+Reference: [Skills Changelog v1.1: /wayfinder, /to-spec, /to-tickets, /grilling improvements, and much more](https://www.aihero.dev/skills/skills-changelog-v1-1-wayfinder-to-spec-to-tickets-grilling-improvements). See also [Skills Changelog v1](https://www.aihero.dev/skills/skills-changelog-v1-announcement).
 
 ## Install
 
-Install or update upstream-tracked Matt Pocock skills first:
-
-```bash
-~/Code/GitHub/zainfathoni/agent-workflows/skills/update-upstream.sh
-```
-
-The upstream updater uses an explicit allowlist and intentionally excludes local-owned `teach`. Override the target agents with `UPSTREAM_SKILLS_AGENTS` if needed; the default is `*`.
-
-Install or update all shared skills by symlinking them into the global skills directory:
+After cloning this repo, bootstrap the `/sync-skills` skill once:
 
 ```bash
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
 
-The default target is `~/.agents/skills`. Override it with `AGENT_SKILLS_DIR`:
+Then invoke `/sync-skills` for all future updates and audits. It runs both scripts below, cleans up deprecated skills, and verifies the installation.
+
+For manual control or troubleshooting, the underlying scripts are:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/skills/update-upstream.sh
+~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
+```
+
+`update-upstream.sh` uses an explicit allowlist and intentionally excludes local-owned `teach`. It also removes deprecated skills via `npx skills remove --global` before installing. Override the target agents with `UPSTREAM_SKILLS_AGENTS` if needed; the default is `*`.
+
+`install.sh` symlinks all local-owned shared skills. The default target is `~/.agents/skills`. Override it with `AGENT_SKILLS_DIR`:
 
 ```bash
 AGENT_SKILLS_DIR=~/.claude/skills ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh

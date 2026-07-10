@@ -13,19 +13,20 @@ Reusable personal agent workflow tooling for repositories that use globally inst
 
 ## Workflow Contract
 
-Planning and triage are manual, maintainer-triggered steps:
+Planning and triage are maintainer-initiated steps. `/prototype` is model-invoked so `/wayfinder` can use it directly, but Ralph must not initiate it.
 
-- `/prototype` answers unclear product, UI, state, or integration questions with throwaway spikes before work is committed to issues.
+- `/to-spec` creates spec issues.
+- `/to-tickets` breaks a spec into tracer-bullet tickets with blocking edges.
+- `/wayfinder` plans large work as a shared map of investigation tickets on the issue tracker, resolved one at a time.
+- `/prototype` answers unclear product, UI, state, or integration questions with throwaway spikes before work is committed to issues. Model-invoked so `/wayfinder` can use it directly.
 - `/handoff` compacts a long planning, debugging, or prototyping session so a fresh agent can continue with context.
-- `/to-prd` creates PRD issues.
-- `/to-issues` creates vertical-slice implementation issues.
 - `/triage` evaluates readiness and applies triage labels.
 
 Ralph starts after triage. It only consumes issues already marked `ready-for-agent`. It also treats GitHub's issue dependency graph as the canonical blocker source: issues with open `blockedBy` dependencies are not eligible for execution.
 
 If upstream skills create issues with `ready-for-agent-triage`, treat that as a planning/triage queue label. It does not make an issue eligible for Ralph until the repository's triage labels map the issue to `ready-for-agent`.
 
-Reference: [Skills Changelog: /handoff, /prototype, /review and /writing](https://www.aihero.dev/skills/skills-changelog-handoff-prototype-review-and-writing).
+Reference: [Skills Changelog v1.1: /wayfinder, /to-spec, /to-tickets, /grilling improvements, and much more](https://www.aihero.dev/skills/skills-changelog-v1-1-wayfinder-to-spec-to-tickets-grilling-improvements).
 
 ## Onboard A Repository
 
@@ -122,7 +123,15 @@ These files adapt the global skills and shared Ralph runner to the local reposit
 
 ## Install Shared Skills
 
-Install or update upstream-tracked Matt Pocock skills first, then install this repo's local-owned/shared skills:
+After cloning this repo, bootstrap the `/sync-skills` skill once:
+
+```bash
+~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
+```
+
+Then invoke `/sync-skills` for all future updates and audits. It runs both scripts below, cleans up deprecated skills, and verifies the installation.
+
+For manual control or troubleshooting, the underlying scripts are:
 
 ```bash
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/update-upstream.sh
