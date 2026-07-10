@@ -7,7 +7,7 @@ date: 2026-05-02
 
 ## Context
 
-Personal repositories use globally installed skills based on <https://github.com/mattpocock/skills>. Those skills can turn product ideas into PRD issues, split plans into implementation issues, triage issues, diagnose bugs, and guide TDD.
+Personal repositories use globally installed skills based on <https://github.com/mattpocock/skills>. Those skills can turn product ideas into specs, break specs into tickets, triage issues, diagnose bugs, and guide TDD.
 
 Several repositories also have repo-local Ralph loop files. Copying runner and prompt files into each repository lets them drift and makes it harder to update the workflow consistently.
 
@@ -17,7 +17,7 @@ We want one reusable workflow implementation that can onboard new repositories a
 
 Ralph is an execution-only runner. It consumes issues that have already been manually triaged to `ready-for-agent`.
 
-Ralph must not run `/to-prd`, `/to-issues`, or `/triage` automatically. Those skills remain maintainer-triggered.
+Ralph must not run `/to-spec`, `/to-tickets`, `/wayfinder`, or `/triage` automatically. Those skills remain maintainer-initiated. `/prototype` is model-invoked so `/wayfinder` can use it, but Ralph still must not initiate it.
 
 GitHub Issues are the source of truth for work. GitHub Projects are preferred dashboards when configured, but labels-only repositories are supported.
 

@@ -15,7 +15,7 @@ Ralph is the execution-only Agent Queue runner for this repository.
 
 Ralph consumes only issues that have already been triaged to the canonical `ready-for-agent` role.
 
-Ralph must not run `/prototype`, `/handoff`, `/to-prd`, `/to-issues`, or `/triage` automatically. Planning, prototyping, handoff, and triage remain maintainer-triggered.
+Ralph must not run `/prototype`, `/handoff`, `/to-spec`, `/to-tickets`, `/wayfinder`, or `/triage` automatically. Ralph does not initiate planning, prototyping, handoff, or triage.
 
 Fresh work must satisfy all of these rules:
 

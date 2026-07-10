@@ -83,7 +83,7 @@ _Avoid_: Private review
 - A **Shared Skill** may be installed globally by symlink, while project-specific skill behavior should remain in repo-local skills.
 - **Upstream Skills** are installed from their upstream source; only materially customized skills become **Local-Owned Skills** in Agent Workflows.
 - **Upstream-Tracked Skills** may accept upstream breaking changes, including renames and removal of deprecated skills.
-- The v1 upstream grilling stack (`grilling`, `domain-modeling`, and `grill-with-docs`) remains **Upstream-Tracked** unless Agent Workflows needs concrete customized behavior.
+- The upstream grilling stack (`grilling`, `domain-modeling`, and `grill-with-docs`) remains **Upstream-Tracked** unless Agent Workflows needs concrete customized behavior.
 - Local-owned `teach` workspaces use **Teaching Workspace Assets** as the default lesson architecture while preserving local codebase source-linking behavior and deferring publication details to **Teaching Workspace Hosting**.
 - The **Local Teach Delta** is the preservation checklist for local-owned `teach`; upstream comparisons may add accepted upstream behavior, but must not erase the delta.
 - **Private Review** skills protect pending review artifacts.

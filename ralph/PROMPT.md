@@ -11,7 +11,7 @@ If a `Runtime Overrides` section appears above this prompt, use those values ins
 - Triage state is represented by labels, not by Project `Status`.
 - Project `Status`, when configured, is delivery progress: `Todo`, `In Progress`, `Done`.
 - Stale/custom Project statuses such as `Ready` or `Backlog` are dashboard drift, not triage state. Repair safe drift to `Todo` instead of silently skipping `ready-for-agent` work.
-- Ralph is execution-only. Do not run `/prototype`, `/handoff`, `/to-prd`, `/to-issues`, or `/triage`.
+- Ralph is execution-only. Do not run `/prototype`, `/handoff`, `/to-spec`, `/to-tickets`, `/wayfinder`, or `/triage`.
 - Do not use local ticket mirrors, Beads, or repo-local backlog files for this workflow.
 
 Before selecting work, read these files if they exist:
