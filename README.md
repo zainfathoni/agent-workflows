@@ -138,9 +138,11 @@ For manual control or troubleshooting, the underlying scripts are:
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
 
-`skills/update-upstream.sh` installs an explicit allowlist of upstream-tracked skills and intentionally excludes local-owned `teach`, so pulling this repo does not depend on a human remembering which upstream skills are safe to update.
+`skills/update-upstream.sh` installs explicit allowlists of upstream-tracked skills, including `shadcn/improve`, and intentionally excludes local-owned `teach`, so pulling this repo does not depend on a human remembering which upstream skills are safe to update.
 
 By default this symlinks shared skills into `~/.agents/skills`. Set `AGENT_SKILLS_DIR` to install somewhere else.
+
+Upstream skills are installed for Amp, Claude Code, and Codex by default. Set `UPSTREAM_SKILLS_AGENTS` to a space-separated subset when a machine needs fewer targets.
 
 ## Script Safety
 

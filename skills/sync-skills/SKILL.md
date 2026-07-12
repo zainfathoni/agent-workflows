@@ -1,6 +1,6 @@
 ---
 name: sync-skills
-description: Synchronize global skill installations across machines. Updates upstream Matt Pocock skills, cleans up deprecated ones, installs local-owned shared skills, and verifies the result. Use when setting up a new machine, after pulling skill changes, or to audit an existing installation.
+description: Synchronize global skill installations across machines. Updates allowlisted upstream skills, cleans up deprecated ones, installs local-owned shared skills, and verifies the result. Use when setting up a new machine, after pulling skill changes, or to audit an existing installation.
 disable-model-invocation: true
 ---
 
@@ -48,9 +48,11 @@ Run the upstream skills installer, which cleans up deprecated skills and install
 This script:
 - Removes deprecated upstream skills (`to-prd`, `to-issues`, `to-plan`, `caveman`, `zoom-out`) from all registered agent directories via `npx skills remove --global`, with a filesystem fallback for stragglers.
 - Installs all upstream-tracked Matt Pocock skills via `npx skills add mattpocock/skills` with an explicit allowlist.
-- Uses `--global` and `--agent *` to install for all detected agents.
+- Installs `improve` from `shadcn/improve` via a separate explicit allowlist.
+- Uses `--global --copy` to install deterministically for the explicitly configured agents, defaulting to `amp`, `claude-code`, and `codex`.
+- Verifies that `improve` and its required reference files are complete at every configured agent destination and that the global Skills CLI lock records `shadcn/improve` as its GitHub source.
 
-Override the target agents with `UPSTREAM_SKILLS_AGENTS` if needed.
+Override the target agents with a space-separated subset of supported IDs, for example `UPSTREAM_SKILLS_AGENTS="amp claude-code"`. The script rejects unknown IDs because their global destinations cannot be verified.
 
 ## Run the local skills installer
 
@@ -74,7 +76,7 @@ After both scripts complete, verify the installation is consistent. Derive the e
 
 ### Expected upstream skills
 
-Read the `UPSTREAM_SKILLS` array from `skills/update-upstream.sh`. These must be present as directories or symlinks in the upstream root (`~/.agents/skills`).
+Read the `UPSTREAM_SKILLS` and `IMPROVE_SKILLS` arrays from `skills/update-upstream.sh`. These must be present as directories or symlinks in the upstream root (`~/.agents/skills`) when the CLI creates a canonical multi-target installation. `improve` must contain `SKILL.md` and all three files under `references/` at every configured agent destination.
 
 ### Deprecated upstream skills
 
@@ -86,8 +88,8 @@ Derive from the filesystem: list every directory under `skills/` that contains a
 
 ### Verification steps
 
-1. Parse `UPSTREAM_SKILLS` and `DEPRECATED_UPSTREAM_SKILLS` arrays from `skills/update-upstream.sh`.
-2. List the upstream root and check every expected upstream skill is present.
+1. Parse `UPSTREAM_SKILLS`, `IMPROVE_SKILLS`, and `DEPRECATED_UPSTREAM_SKILLS` arrays from `skills/update-upstream.sh`.
+2. List the upstream root and check every expected upstream skill is present. For `improve`, check the complete required file set and each configured agent destination as enforced by `update-upstream.sh`.
 3. Check that no deprecated skills remain in the upstream root, the local root, or `~/.claude/skills`.
 4. List directories with `SKILL.md` under `skills/` and check each is a valid symlink in the local root pointing into the agent-workflows repo.
 5. Report any missing, extra, or broken symlinks.
