@@ -1,99 +1,51 @@
 ---
 name: daily-standup
-description: Adds BookThatApp daily standup entries to Obsidian daily notes from the given platform or user-provided links. Use when asked to update today's BTA standup, add INFO/HELP/FOCUS items, or record Vlad's daily status.
+description: Adds BookThatApp INFO, HELP, and FOCUS updates to Obsidian daily notes. Use with supplied status data or direct requests to update Zain's or Vlad's BTA standup.
 ---
 
 # Daily Standup
 
-Update `log/daily/YYYY-MM-DD.md` with BTA daily standup entries using the provided platform source or user-provided ticket/PR links.
+Add standup updates to `log/daily/YYYY-MM-DD.md` without disturbing other daily-note content.
 
-## When to use
+## Required context
 
-Use this skill when the user asks to:
+Before editing a daily note, read the [BTA daily-note reference](../reference/bta-daily-note.md) in full. Treat it as authoritative for the shared schema, source handling, ownership, links, deduplication, and standup-versus-release routing. Apply the standup-specific rules below in addition to that reference.
 
-- add today's daily standup entries
-- update the BTA standup from a platform, ticket list, Trello card, GitHub PR, Slack text, or pasted status
-- add `[INFO]`, `[HELP]`, `[FOCUS]`, or Vlad standup items to `log/daily/YYYY-MM-DD.md`
+## Classify standup items
 
-## Source of truth
+- `[INFO]`: informational updates, including deployed-to-staging, ready-to-test, an already-raised PR, or environment availability when no specific person must act.
+- `[HELP]`: review, testing, approval, or attention is needed.
+- `[FOCUS]`: the main work planned for today.
+- Preserve an explicit supported prefix and the user's wording. If classification or ownership remains ambiguous after applying the source precedence, ask one concise question rather than guessing.
 
-1. The user's provided platform data, pasted status, ticket links, or PR links.
-2. The existing `log/daily/YYYY-MM-DD.md` file for today's format and placement.
-3. Recent daily notes only if today's file is missing or the section structure is unclear.
+## Format bullets
 
-Do not query external systems unless the user explicitly provides the platform workflow or asks you to use an available CLI/API. Preserve links exactly as given.
+- Use one bullet per item and only the prefixes `[INFO]`, `[HELP]`, and `[FOCUS]`.
+- Ticket and PR: `- [HELP] [Ticket title](ticket-url) status text - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
+- PR only: `- [HELP] PR title/status - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
+- Ticket only: `- [FOCUS] [Ticket title](ticket-url)`, `- [HELP] [Ticket title](ticket-url) status text`, or `- [INFO] [Ticket title](ticket-url) status text`
+- Do not invent titles, statuses, or links. Only normalize spacing around links when needed.
 
-## Daily note structure
+## Process
 
-Use this BTA structure:
+1. Determine the target date, defaulting to today. **Complete when:** one date and target `log/daily/YYYY-MM-DD.md` path are explicit.
+2. Read the required shared context, then read the entire target daily note. If it is absent, create it exactly as the shared context specifies. **Complete when:** the complete original note is known and the target exists with the required schema.
+3. Collect every requested item from either input branch:
+   - **Provided input:** extract updates from platform data, ticket or PR links, Trello cards, Slack text, or pasted status.
+   - **Direct standup request:** use the items and owner stated by the user.
+   **Complete when:** every supplied item has a working record containing its available wording, owner, status, and exact URLs.
+4. Route each item using the shared standup-versus-release rule. Classify every standup item as INFO, HELP, or FOCUS. When an item routes to release, read the release skill's [selection, labeling, and formatting rules](../release/SKILL.md#select-release-items) and apply those item-specific rules without restarting its process. **Complete when:** every working record has one evidenced destination, every standup record has one supported classification, and every release record has one release label.
+5. Format each item for its destination, preserving exact links and explicit supported labels, then deduplicate it according to the shared policy. Reconcile a matching older-state bullet from the other section. **Complete when:** every record is either one valid destination bullet or one identified duplicate, with all supplied URLs unchanged and no stale cross-section copy.
+6. Place every remaining bullet in the correct owner's standup or release block. Preserve the existing greeting and all non-target content. **Complete when:** each non-duplicate bullet appears once in its destination owner position and a comparison with the original confirms non-target content is unchanged.
+7. Read back every standup and release owner block targeted by the supplied items and check the completion criteria. **Complete when:** every criterion below passes or each failing criterion is reported as a blocker.
 
-```md
----
-date: YYYY-MM-DD
-tags:
-  - webstreet/bta
----
-# BTA
+## Completion criteria
 
-## Daily Standup
+The task is complete only when all checks pass:
 
-🌥️️️ Good afternoon, here's my update for today:
-
-- [INFO] ...
-- [HELP] ...
-- [FOCUS] ...
-
-### Vlad
-
-- ...
-
-## Released ✅
-
-### Vlad
-
-## Escalated Bugs 🐛
-
-## Private Notes 📝
-```
-
-If the file already exists, preserve all non-target content and only add/update the relevant bullets.
-
-## Workflow
-
-1. Determine the target date; default to today.
-2. Read `log/daily/YYYY-MM-DD.md`.
-3. If the file does not exist, create it with the structure above.
-4. Extract entries from the provided platform data:
-   - Informational status updates become `[INFO]` bullets, especially deployed-to-production, deployed-to-staging, ready-to-test, already-raised-PR, or environment availability updates that do not require a specific person to act.
-   - Items needing review, testing, approval, or attention become `[HELP]` bullets.
-   - Items planned as the main work for today become `[FOCUS]` bullets.
-   - Completed shipped work belongs under `## Released ✅`, not `## Daily Standup`.
-   - Teammate entries for Vlad belong under `### Vlad` in the relevant section.
-5. Preserve Trello, GitHub, Slack, Zendesk, and legacy Shortcut links exactly.
-6. Deduplicate against existing bullets by matching ticket/PR URLs and item titles.
-7. Insert Zain standup bullets between the greeting line and `### Vlad`.
-8. Insert Vlad standup bullets under the `### Vlad` subsection before `## Released ✅`.
-9. Keep section headings present even when empty.
-
-## Formatting rules
-
-- Use one bullet per item.
-- Keep the existing greeting line if present.
-- Supported standup prefixes are `[INFO]`, `[HELP]`, and `[FOCUS]`.
-- Use the exact status labels supplied by the user when they are already `[INFO]`, `[HELP]`, or `[FOCUS]`.
-- Preserve the user's wording when the prefix is already supplied; only normalize spacing around links if needed.
-- If an item includes both a ticket and PR, format it like:
-  `- [HELP] [Ticket title](ticket-url) status text - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
-- If only a PR is supplied, use:
-  `- [HELP] PR title/status - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
-- If only a ticket is supplied, use:
-  `- [FOCUS] [Ticket title](ticket-url)`, `- [HELP] [Ticket title](ticket-url) status text`, or `- [INFO] [Ticket title](ticket-url) status text`
-- Do not invent ticket titles, status, or links. Ask one concise question if classification or ownership is ambiguous.
-
-## Verification
-
-After editing, read the changed daily note section and verify:
-
-- The requested bullets appear once.
-- Zain and Vlad entries are in the correct subsection.
-- Existing content outside the target section is preserved.
+- Every requested item was considered and either added once, skipped as a duplicate, or routed to release; no item is silently omitted.
+- Every added standup bullet has exactly one supported prefix and follows the applicable format.
+- Zain and Vlad bullets are in their respective owner positions.
+- Each supplied URL is reproduced exactly, and no title, status, owner, or link was invented.
+- The greeting, required headings, existing bullets, other sections, and private notes are preserved.
+- No unreleased item was placed under `## Released ✅`, and no completed shipped work was placed in standup.

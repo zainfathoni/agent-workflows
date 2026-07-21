@@ -1,63 +1,50 @@
 ---
 name: log-notes
-description: "Logs fleet operational work to the fleet vault and personal or non-fleet work to the user's iCloud Obsidian notes, including durable owner notes. Use when asked to log actions, document a session, update notes, or capture reusable context."
+description: Logs completed work and durable context to its owning Obsidian vault. Use for fleet operational notes or personal and non-fleet notes.
 ---
 
 # Log Notes
 
-Route operational fleet knowledge to the fleet vault and personal or non-fleet knowledge to the user's iCloud Obsidian vault. Daily notes keep the session trail; owner notes keep durable knowledge.
+Put each fact in the vault and note that naturally own it. There are two independent decisions: **vault owner** (fleet or iCloud) and **note owner** (daily session trail or durable owner note).
 
-Vault paths:
+## Routing model
+
+### 1. Choose the vault owner
+
+- **Fleet:** machine inventory, access, state, restoration, cross-machine systems, and operational endpoint knowledge.
+- **iCloud:** personal and non-fleet work. Its vault and daily directory are:
 
 ```text
 /Users/zain/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-notes/
 /Users/zain/Library/Mobile Documents/iCloud~md~obsidian/Documents/obsidian-notes/log/daily/
 ```
 
-## Choose and discover the vault
+- **Mixed work:** use both vaults when appropriate, but give each fact exactly one owner. Link or briefly reference across vaults rather than duplicating sections.
 
-- Fleet operational work belongs in fleet: machine inventory/access/state/restore work, cross-machine systems, and operational endpoint knowledge.
-- Personal and non-fleet work retains the existing iCloud behavior and paths above.
-- Mixed work may update both vaults. Give each fact one natural owner and link or briefly reference it; do not duplicate whole sections between vaults.
-- Discover fleet in this order:
+Discover fleet in this exact order:
+
   1. `$FLEET_VAULT`, when set.
   2. The current repository, when its remote or repository name identifies `fleet`; during the rename transition, also accept `zainfathoni/mac-notes` only when the vault structure validates.
   3. `~/Docs`.
   4. `~/fleet`.
-- Validate every candidate before selecting it: it must be a directory and contain `CONTEXT.md`, `machines/`, `systems/`, and either `index.md` or `.obsidian/`. Do not select an arbitrary similarly named directory. If none validates, report fleet unavailable instead of guessing or redirecting fleet facts into iCloud.
 
-## Workflow
+Validate each candidate before selecting it. A fleet vault is a directory containing `CONTEXT.md`, `machines/`, `systems/`, and either `index.md` or `.obsidian/`. If no candidate validates, report that fleet is unavailable; never guess, select a similarly named directory, or silently redirect fleet facts into iCloud.
 
-1. Identify all target notes.
-   - In fleet, use `daily/YYYY-MM-DD.md`; durable facts belong in `machines/<id>/index.md` or the relevant machine topic note, or in `systems/<id>.md`.
-   - In iCloud, use `log/daily/YYYY-MM-DD.md` for completed-work session logs.
-   - Also update topical/project notes that own durable facts, decisions, restore details, current state, or follow-ups.
-   - Search before creating topical notes; prefer an existing owner note. Create one only when the outcome needs a durable home.
-2. Read each target note before editing it.
-3. Append or update the smallest relevant section; preserve unrelated content and local style.
-4. Record only useful future context: request, finding/result, changed files/systems, validation, follow-ups or cautions.
-5. Cross-link daily and topical notes with Obsidian wikilinks when it helps navigation.
-6. For fleet daily notes, add only relevant YAML frontmatter tags: `machines/<id>` and `systems/<id>`. Repositories are not tags. Add body wikilinks when useful.
-7. Never commit or push either vault.
-8. At completion, report changed files, repository `git status` when applicable, and pre-existing/unrelated changes separately.
+### 2. Choose the note owner
 
-## Daily vs topical
+- **Daily note:** session history, drafts, timestamps, one-off investigation or support/deployment narration, and detailed source context. Use `daily/YYYY-MM-DD.md` in fleet or `log/daily/YYYY-MM-DD.md` in iCloud. A one-off investigation with no lasting outcome can remain daily-only.
+- **Durable owner/topical note:** reusable facts, decisions, operating rules, gotchas, restoration details, current state, and deferred actions. Use `machines/<id>/index.md`, a relevant machine topic note, or `systems/<id>.md` in fleet; use the relevant project/topical note in iCloud. Update one whenever work changes current state, affects future restoration/debugging/setup, changes a deferred action, records a lasting decision, or would otherwise strand reusable knowledge in a daily note.
 
-- Daily notes own session history, drafts, timestamps, one-off support/deployment narration, and detailed source context.
-- Topical/project notes own reusable knowledge: stable facts, decisions, operating rules, gotchas, restore details, and current state.
-- Do not copy daily sections into topical notes. Summarize the durable lesson and link back if provenance matters.
+Search for an existing owner note before creating one. Create a note only when a durable outcome has no existing home. Summarize the durable lesson rather than copying a daily section, and link back when provenance helps.
 
-## When to update topical notes
+## Ordered workflow
 
-Update a non-periodic owner note outside the selected vault's daily directory (`daily/` in fleet; `log/daily/` in iCloud) when the work:
-
-- changes current system/project state
-- affects future restoration, debugging, or setup
-- resolves, narrows, or adds a deferred action
-- records a lasting user decision
-- would otherwise leave reusable knowledge only in the daily note
-
-A one-off investigation with no lasting outcome can stay daily-only.
+1. **Inventory the facts and choose each vault owner.** For fleet facts, run ordered discovery and structural validation before proceeding. **Complete when every fact is assigned to fleet or iCloud, mixed-work facts have one owner each, and every selected fleet path has passed all structural checks.**
+2. **Choose each note owner.** Identify the daily note for the session trail and search for existing durable owner notes; create a durable note only when required by the routing criteria and no owner exists. **Complete when every fact is assigned to a specific daily or durable note and every proposed new note has been checked against existing owner notes.**
+3. **Read every target note before editing.** Observe its headings, frontmatter, links, and entry conventions. **Complete when the full current contents and local style of every target have been inspected.**
+4. **Make the smallest local-style edit.** Record useful future context: request, finding or result, changed files or systems, validation, and unresolved follow-up or caution. Preserve unrelated content; use useful Obsidian wikilinks between daily and owner notes. For fleet daily notes, add only relevant `machines/<id>` and `systems/<id>` YAML tags; repositories are not tags. **Complete when all routed facts are recorded once, durable summaries replace copied narration, links and tags are useful and valid, and no unrelated text changed.**
+5. **Review safety and repository state.** Keep entries brief and scrubbed; record a non-secret owner/location reference instead of any token, secret value, secret payload, or sensitive command output. Do not commit or push either vault. **Complete when the diff contains no secrets, transcripts, command dumps, internal tool details, or unrelated edits, and no commit or push was performed.**
+6. **Report the result.** List changed files and validation, include repository `git status` where applicable, and distinguish pre-existing or unrelated changes. **Complete when every changed file is accounted for and all unrelated status is explicitly separated from this task's changes.**
 
 ## Daily log format
 
@@ -85,5 +72,4 @@ If the relevant area heading exists, append the new `##` section there. Otherwis
 
 - Keep entries brief and skimmable.
 - Prefer concrete paths and commands over vague summaries.
-- Never record secret values, tokens, or secret payloads, plaintext or encrypted. In fleet, record only a non-secret owner/location reference.
-- Avoid transcripts, command dumps, internal tool details, and sensitive command output; include only scrubbed details needed for future restoration.
+- Include only scrubbed details needed for future restoration.

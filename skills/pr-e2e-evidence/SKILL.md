@@ -1,357 +1,89 @@
 ---
 name: pr-e2e-evidence
-description: Runs repo-agnostic PR E2E evidence flow from PR creation through dev/preview/staging browser verification, before/after screenshots or short videos, and PR description updates. Use when asked to create a PR with E2E evidence, attach dev or staging browser evidence, capture browser screenshots or interaction videos, wait for deployment, compare baseline vs candidate, or update PR descriptions with collapsible QA sections.
+description: Collects and publishes browser-facing PR E2E evidence. Use for static pre-merge screenshots, baseline/candidate UI comparison, bounded interaction video, or post-deployment verification.
 ---
 
 # PR E2E Evidence
 
-## Quick Start
+Produce a compact, reproducible browser record that lets a reviewer judge the PR without reconstructing the test session.
 
-Use after implementation is ready and the user wants PR E2E evidence: create a PR if missing, discover the repo's relevant PR and deployment conventions, exercise the affected browser workflow, capture concise screenshot or video evidence, draft the evidence under `docs/tests/` with embedded screenshots by default, upload the final evidence to the GitHub PR, wait for deployment when needed, capture deployed browser evidence, update the draft and PR again, then clean up any temporary browser/evidence helpers.
+## Evidence Contract
 
-Evidence should be browser-facing:
-- Dev, preview, or staging Chrome/browser verification.
-- Before/after screenshots, focused after-only screenshots, console/network notes, and baseline-vs-candidate comparisons.
-- Cropped and combined interaction evidence by default: show the meaningful UI before the user action and the meaningful result after the action in one annotated image whenever that tells the story better than separate screenshots.
-- Short, captioned video only when motion or timing is itself evidence, such as navigation guards, loading transitions, save/discard lifecycles, animation, or layout shifts.
-- Avoid duplicating non-browser implementation verification in the PR evidence unless the user explicitly asks for it.
+- Populate the evidence section with browser verification; add implementation verification when the user explicitly requests it.
+- Name the exact environment, route, browser surface, role, fixture or data, interaction mode, and result needed to reproduce each claim.
+- Keep claims bounded to the scenario exercised. Record unrelated console or network noise separately and state whether it blocked the scenario.
+- Provide an adjacent text verdict for every visual artifact. Use labels and captions in addition to color so the evidence remains accessible without playing a video.
+- Treat GitHub attachment URLs as shareable. Never capture secrets or sensitive merchant or customer data.
 
-Default draft evidence location:
-- Use `docs/tests/<platform>-<id>/` as the working area for drafting PR evidence unless the repository already has a more specific documented convention. Examples: `docs/tests/github-123/`, `docs/tests/linear-ABC-123/`, or `docs/tests/jira-PROJ-123/`.
-- Store the draft Markdown at `docs/tests/<platform>-<id>/<file>.md`.
-- Store draft screenshots in the same `docs/tests/<platform>-<id>/` area, preferably in a sibling assets directory or a subdirectory named after the draft document.
-- Embed screenshots in the Markdown draft with relative paths so the evidence can be reviewed locally, for example `![Dev booking save evidence](./<assets-dir>/dev-booking-save.png)`.
-- Treat the `docs/tests/<platform>-<id>/<file>.md` document as an intermediary artifact for composing the final PR evidence. The final evidence belongs in the actual GitHub PR description or PR attachments, not only in `docs/tests/`.
-- Unless the user asks to commit the draft evidence, remove or leave uncommitted any temporary `docs/tests/<platform>-<id>/` draft files after the PR has been updated.
+## Screenshot or Video Gate
 
-## Repo Discovery
+Use screenshots by default. Prefer one cropped, annotated before/after composite when a decision point and result tell the story together; focused after-only evidence is valid when labeled honestly.
 
-Before collecting evidence, inspect the repository for local conventions:
+Choose video when motion, timing, or a multi-stage interaction is itself the evidence: navigation guards, loading transitions, save/discard lifecycles, animation, or layout shifts. Keep a decisive still and text verdict as the canonical review record. Treat the named scenario as the video's full coverage boundary.
 
-- PR template sections and expected placement for E2E evidence.
-- Deployment environments such as local dev, preview, staging, production baseline, or other named environments.
-- Browser surfaces, route paths, user roles, tenant/account setup, feature flags, and data fixtures needed for reliable evidence.
+## Ordered Evidence Process
 
-If the relevant environment or browser surface is unclear, ask the user before collecting evidence.
+### 1. Discover the local contract
 
-## PR Creation
+Inspect the repository's PR template and documented QA, deployment, route, role, tenant/account, feature-flag, fixture, and evidence conventions. Check for an existing PR before creating one:
 
-- Check for an existing PR before creating one:
-  `gh pr list --head $(git branch --show-current) --json number,title,url,state`
-- If missing, create the PR with the repository's PR template preserved.
-- Use `gh pr edit` for description updates.
-
-## Dev Or Preview E2E Browser Evidence
-
-Exercise the affected user workflow in the closest relevant browser environment: local dev, preview, staging, or a production baseline plus candidate deployment. Capture the state that proves the behavior, preferably at the decision point before the action and the resulting state after the action.
-
-Record environment, route or scenario, selected fixture/data, result, notable console/network observations, and cleanup performed.
-
-## Short Video Evidence
-
-Use video only when a still or annotated before/after composite cannot show the important timing or interaction clearly. Keep text and a decisive screenshot as the canonical review record; video is supplemental and must not imply broader coverage than its named scenario proves.
-
-Default capture:
-
-- Record one behavior and one assertion in 8–15 seconds; 30 seconds is the maximum.
-- Hold the initial and final states for 1–2 seconds.
-- Use a 1280×720, 16:9 canvas at 25–30 fps. Place a native mobile viewport inside that canvas with room for captions instead of publishing a tall social-video frame.
-- For a visual regression, show labeled Before/After panels simultaneously. For an interaction lifecycle, use numbered stages such as `1/3 dirty`, `2/3 navigation blocked`, and `3/3 discarded`.
-- Show a purposeful 20–24 px high-contrast cursor with a brief click ripple. Playwright video does not show a cursor unless the capture injects one.
-- Bake in a short scenario/environment header and one action/result caption per stage. Use text as well as color and do not require narration or audio.
-- Start with Playwright's WebM/VP8 output when it is already available. GitHub accepts `.webm`, but recommends H.264 for greatest browser compatibility; verify playback in the reviewers' browsers before publishing.
-- Target less than 3 MB and enforce less than 10 MB. Do not use GIF as the default video substitute.
-
-For successful evidence, create a disposable Playwright context with recording enabled instead of relying on a repository's failure-only video setting:
-
-```js
-const context = await browser.newContext({
-  viewport: { width: 1280, height: 720 },
-  recordVideo: {
-    dir: '/tmp/pr-e2e-video',
-    size: { width: 1280, height: 720 },
-  },
-});
-const page = await context.newPage();
-const video = page.video();
-
-// Exercise one bounded scenario and add caption/cursor overlays if needed.
-
-await page.close();
-const videoPath = await video.path();
-await context.close();
+```bash
+gh pr list --head "$(git branch --show-current)" --json number,title,url,state
 ```
 
-Before upload, inspect the final file at normal playback size. Confirm the verdict, captions, cursor/clicks, route context, duration, dimensions, codec, and size. Record the same result in adjacent PR text so the evidence remains understandable without playing the video. Never capture secrets or sensitive merchant/customer data; treat GitHub attachment URLs as shareable.
+If no PR exists and PR creation is in scope, create one while preserving the template. Ask one narrow question when the relevant environment or browser surface remains ambiguous after discovery.
 
-## PR Description Format
+**Complete when:** the PR target, template placement, environment, exact browser surface, access context, and required deployment follow-up are known.
 
-Add or update a `## E2E evidence` section in the PR body. Preserve the repository's PR template and place the section near existing checklist, QA, or validation sections when present. By default, first draft the full evidence in a Markdown document at `docs/tests/<platform>-<id>/<file>.md` with screenshots embedded via relative paths, then use that draft to update the actual GitHub PR with the final evidence.
+### 2. Define the proof
 
-Default to putting pre-merge evidence in the PR description, not in a PR comment. The PR body is the review artifact while the PR is still open. Comments are appropriate for post-production deployment evidence after the PR has already been merged, when the comment serves as a deployment follow-up record rather than review evidence. Comments are also acceptable when the repository convention or user explicitly asks for a comment, or when the PR body is not editable. If the comment editor is used only as GitHub's attachment uploader, extract the `user-attachments` URLs, clear the editor, and do not submit the comment.
+Write a bounded scenario with its starting state, action, expected result, route, fixture/data, and meaningful console or network checks. For a regression comparison, identify the stable baseline and candidate and align viewport, scroll position, filters, dates, account, role, flags, and UI mode as closely as practical.
 
-Default `docs/tests/` draft document format:
+**Complete when:** every intended claim maps to one reproducible browser scenario and any unavoidable baseline/candidate mismatch is recorded.
 
-````md
-# E2E evidence: <PR title or feature>
+### 3. Choose the smallest decisive medium
 
-Environment:
-- Branch: `<branch>`
-- Commit: `<commit>`
-- Primary URL: `<url>`
-- Candidate URL: `<url-if-used>`
-- Baseline URL: `<url-if-used>`
+Apply the screenshot-or-video gate above. Use the closest relevant browser environment: local dev, preview, staging, or a production baseline plus candidate deployment.
 
-## Summary
+- For screenshots or manual before/after comparison, read [`reference/screenshots.md`](reference/screenshots.md) before capture.
+- For temporal evidence, read [`reference/video.md`](reference/video.md) before recording.
 
-- `<browser scenario>`: `<result>`
+**Complete when:** each scenario has one chosen medium and the selected branch reference has been read.
 
-## Evidence
+### 4. Capture and inspect
 
-### Browser verification
+Exercise the real interaction mode and capture only the state needed to prove the result. Ground the exact surface before claiming coverage: related widgets or routes are separate claims. Inspect final media at normal review size; recapture evidence that shows stale loading, the wrong state, hidden labels, or misleading crops.
 
-Result:
-- `<verified behavior>`
+**Complete when:** every claim has inspected media showing the named surface, action or comparison, and result, with no sensitive data.
 
-Console/network notes:
-- `<notable warnings or none>`
+### 5. Compose the local draft
 
-![Scenario label](./<assets-dir>/<scenario-screenshot>.png)
-````
+Create `docs/tests/<platform>-<id>/<file>.md`, store draft screenshots in the same evidence area, and embed them with relative paths. Record branch and commit, URLs, scenario, result, reproduction context, console/network notes, limitations, and cleanup. Read [`reference/pr-templates.md`](reference/pr-templates.md) when composing the draft or PR section.
 
-Use a stable, descriptive path such as `docs/tests/github-123/e2e-evidence.md`, `docs/tests/linear-ABC-123/e2e-evidence.md`, or `docs/tests/jira-PROJ-123/e2e-evidence.md`. After the draft is complete, upload or embed the screenshots in the GitHub PR and copy the relevant Markdown into the PR body. Do not leave the PR pointing only to local draft evidence unless the repository explicitly expects committed evidence documents.
+Treat this directory as working material for the final PR evidence rather than the final destination.
 
-### Uploading media to GitHub-hosted attachments
+**Complete when:** the local Markdown renders as a self-contained review draft and every media reference resolves relatively.
 
-When the user wants the agent to attach screenshots or videos directly to a GitHub PR or issue, prefer GitHub-hosted attachment URLs over repository raw URLs. `raw.githubusercontent.com` links from a separate notes/assets repository may not render reliably in PR conversations. GitHub-hosted image attachment URLs look like:
+### 6. Publish the pre-merge evidence
 
-```md
-![Scenario label](https://github.com/user-attachments/assets/<uuid>)
-```
+Make the open PR body the final pre-merge evidence location. A repository convention, explicit user request, or uneditable body may select an intentional comment instead. Transfer the structured evidence and embed renderable media. When GitHub-hosted attachment upload is needed, read and follow [`reference/github-publishing.md`](reference/github-publishing.md). The comment editor may generate attachment URLs, but never submit an upload-only comment; clear it after extracting the URLs.
 
-Use this browser-based upload flow when Chrome DevTools is available and the browser is logged in to GitHub. The default pre-merge target is the PR body, with the comment editor used only as an attachment URL generator:
+Use `gh pr edit --body-file` or the browser edit UI. Group evidence by scenario or surface, preserve the existing template, and explain what each artifact demonstrates.
 
-1. Open the PR or issue conversation in the browser.
-2. Scroll to the comment editor.
-3. Use the editor's "Paste, drop, or click to add files" / attachment target to upload each local media file.
-4. Wait for each upload placeholder to become completed Markdown or a stable GitHub attachment URL.
-5. Preserve the editor's generated image or video syntax and extract any attachment URLs needed for the PR body.
-6. Clear the comment editor and verify the PR comment button is disabled or the editor is empty.
-7. Add the generated attachment markup to the structured `## E2E evidence` section in the PR body with `gh pr edit --body-file` or the browser edit UI.
-8. Verify the PR body renders every screenshot or playable video, contains the new attachment URLs, and has not gained an unintended comment.
+**Complete when:** the chosen PR location renders the structured evidence and all media, existing template content remains intact, and no unintended comment was created.
 
-Only submit a PR comment when that is intentionally the final evidence location. The common intentional case is post-production deployment evidence after the PR is merged. If an earlier comment used non-rendering raw URLs, prefer deleting it when redundant and authored by you; otherwise edit it to say it is superseded and link to the rendered attachment-hosted evidence.
+### 7. Follow the deployment
 
-Practical DevTools pattern:
+When preview, staging, or production verification is required, keep that environment marked pending until it is ready, then repeat the same bounded scenario in the deployed environment. Use the closest supported equivalent when a surface is unavailable and explain the difference.
 
-```text
-upload_file(uid=<attachment drop target>, filePath=<local media file>)
-wait until the editor text contains `user-attachments` and no longer contains `Uploading`
-repeat for each media file
-read the editor text and map alt text / filename to attachment URL
-clear the editor value and dispatch input/change events
-update the PR body with the final grouped Markdown evidence
-verify comment count did not increase
-```
+Update the local draft while it remains active. Before merge, replace pending body text with the deployed result. After merge, an intentional PR comment may record production verification chronologically; use GitHub-hosted attachments, production URLs, scenario grouping, and console/network notes.
 
-For many media files, upload one at a time or in small batches. After each upload, verify the count of attachment URLs increased before starting the next upload. For video, also verify that the PR body presents a playable control rather than only an opaque download link. This avoids losing track of failed, slow, or still-pending uploads.
+**Complete when:** each required environment is either explicitly pending with a reason or published with a reproducible result in the correct PR location.
 
-If browser upload is unavailable, optional fallbacks are:
+### 8. Clean up and report
 
-- Ask the user to upload the files manually and provide the rendered Markdown/URLs.
-- Use a CLI helper such as `gh image` / `gh-image` only if it is already installed or acceptable to install, and only if it can access a valid GitHub browser session token.
-- Use an external public image host only when the user explicitly accepts that visibility and durability tradeoff.
+Remove temporary browser helpers and recording overlays. Remove or leave uncommitted the `docs/tests/` draft and generated media unless the user requested a commit or the repository requires durable evidence. Retain raw local video only until upload and playback are confirmed.
 
-Do not treat screenshots or videos committed to `docs/tests/` or a notes repository as final PR evidence unless the PR comment/body embeds renderable media. Do not commit generated video by default. GitHub documents no attachment-retention SLA, so keep PR text and decisive stills as the durable evidence record and retain raw local video only until upload and review are confirmed.
+Report the PR URL, environments verified, scenarios and verdicts, evidence location, deployment status, limitations, and cleanup state.
 
-### Evidence Dos and Don'ts
-
-Do:
-
-- Ground the browser surface before claiming coverage. If a customer reports a Calendar widget, verify whether the live page is the app-proxy Calendar page, an embedded React/xcomponent Calendar widget, an Upcoming Event widget, or a different storefront surface.
-- Use the closest matching deployed route for staging/preview evidence. For example, staging Shopify app proxies may use a different path prefix than production, such as `/apps/bookthatapp-staging` instead of `/apps/bookthatapp`; discover and record that difference.
-- Capture the interaction mode that matches the report. If the bug occurs in list view, include list-view evidence even if month-view evidence also passes.
-- Crop screenshots to the important UI before uploading final evidence. Keep enough context to identify the store/page/widget, but remove long blank areas, unrelated product grids, footers, repeated storefront content, and off-screen whitespace.
-- Merge related before/after interaction screenshots into one annotated composite by default. For click-through evidence, pair “before: actionable link/control visible” with “after: expected destination/result visible.”
-- Annotate composites with clear labels such as `Before: event link visible` and `After: product page opened`, plus a short title naming the environment and widget/surface. Use borders or headers that clarify the story without obscuring UI content.
-- If a raw screenshot was captured too early, too late, or while a widget was still loading, recapture or crop from a correct state before using it. Do not upload evidence that visually contradicts the stated result.
-- Include enough route/data context in the PR body for reviewers to reproduce the evidence: store, environment, path, fixture/event/product name, selected date/filter, and target URL after click.
-- Note unrelated console/network noise separately instead of hiding it. State whether it blocked the scenario or was outside the behavior under test.
-- Keep local draft evidence and annotated screenshots useful for review, but treat them as source material for the PR body, not as the final artifact.
-
-Don't:
-
-- Don't leave a PR comment just to get GitHub attachment URLs. Upload through the comment box if needed, extract the URLs, clear the editor, and put the evidence in the PR description by default.
-- Don't use PR comments for normal pre-merge review evidence unless explicitly requested. Save comments for post-production deployment evidence after merge, repository convention, or body-not-editable cases.
-- Don't use public upload helpers or image hosts when the user asks for Chrome/GitHub attachment uploads or when visibility matters.
-- Don't assume the homepage has the same widgets across dev, staging, and production. If the requested storefront lacks the widget, use a documented app-proxy/admin-preview route or explain the closest available equivalent.
-- Don't mark a production issue as addressed solely because a related widget passes. Confirm the exact reported widget path or explicitly document which surface remains unverified.
-- Don't conflate navigation success with downstream product-widget health. A product-page reservation/checking error after navigation can be unrelated to a Calendar link-click fix; record it separately.
-- Don't upload tall full-page screenshots when a compact crop or composite would be clearer. Full-page screenshots are useful as raw source material, not usually as final PR evidence.
-- Don't upload separate before and after screenshots when they only make sense as one interaction. Combine them first, then upload the composite.
-- Don't add callout boxes or labels that are cropped away, hidden below the fold, or too far from the relevant UI. Inspect the final composite before uploading.
-
-For E2E browser evidence:
-
-````md
-## E2E evidence
-
-<details>
-<summary>Dev browser verification</summary>
-
-Passed on dev.
-
-Result:
-- `<verified behavior>`
-
-Screenshots:
-- `<scenario label>`:
-  <uploaded or embedded in the GitHub PR; drafted first in `docs/tests/<platform>-<id>/<file>.md`>
-
-</details>
-
-<details>
-<summary>Staging browser verification</summary>
-
-Pending staging deployment.
-
-</details>
-````
-
-After staging or preview deployment is ready, replace pending text with result and screenshot reference.
-
-For manual browser verification evidence, use the same `## E2E evidence` placement and use a summary that names the evidence type:
-
-````md
-## E2E evidence
-
-<details>
-<summary>Manual browser verification evidence</summary>
-
-Passed on dev.
-
-Environment:
-- Branch: `<branch>`
-- Commit: `<commit>`
-- Primary URL: `<url>`
-- Candidate URL: `<url>`
-- Baseline URL: `<url-if-used>`
-
-Result:
-- `<verified behavior>`
-
-Console/network notes:
-- `<notable warnings or none>`
-
-Screenshots:
-- `<scenario label>`:
-  <uploaded or embedded in the GitHub PR; drafted first in `docs/tests/<platform>-<id>/<file>.md`>
-
-</details>
-````
-
-### Manual Before/After Browser Evidence
-
-Use this when the PR needs visual regression-style evidence across a baseline environment and a candidate environment.
-
-Also use this pattern for single-environment interaction evidence. In that case “before” is the state immediately before the user action, and “after” is the resulting page/state after the action. Examples: widget event link before click → product page after click; form before save → success state after save; browser Back returns to listing → second click opens destination.
-
-Process:
-
-1. Capture matching baseline and candidate screenshots for each route or scenario.
-   - Use the stable deployed environment as the before baseline.
-   - Use the PR, dev, preview, or staging deployment as the after candidate.
-   - Keep viewport, scroll position, filters, date ranges, selected records, account, role, feature flags, and relevant UI mode as similar as practical.
-   - If exact parity is impossible, note the reason in the PR description.
-2. Crop each source screenshot to the important section before final upload.
-   - Keep page/store/widget identity when it helps reviewers trust the evidence.
-   - Remove unrelated storefront sections, footers, product grids, blank space, browser chrome, and repeated content.
-   - If the interesting part spans a tall widget, crop to the relevant control/event row and enough surrounding context to identify it.
-   - If the crop reveals the wrong state, such as `Loading...` or `No events` when the result claims an event link was clicked, recapture the screenshot instead of forcing the crop.
-3. Combine each before/after pair into one image.
-   - Left side: `Before: <baseline environment>`.
-   - Right side: `After: <candidate environment>`.
-   - Include the page or scenario title in the image.
-   - For interaction evidence, use action-oriented labels such as `Before: event link visible` and `After: product page opened`.
-   - Add a short note in the composite if the widget was mounted through a documented injected container, uses staging-only fixture data, or differs from the customer page.
-   - Prefer unobtrusive headers, borders, and arrows over heavy highlights. Highlights are okay when they clarify the exact clicked element, but must not obscure text or controls.
-4. Inspect the final composite before upload.
-   - Verify it shows the claimed before state, claimed after state, relevant labels, and no misleading stale/loading state.
-   - Prefer uploading the composite to the PR body. Keep raw full-size screenshots local as source material unless the user asks for them.
-5. Move draft screenshots into the `docs/tests/<platform>-<id>/` evidence directory by default.
-   - Use descriptive filenames, for example `<ticket-or-pr>-<date>-<route-or-scenario>-before-after.png`.
-   - Embed each screenshot in the corresponding `docs/tests/<platform>-<id>/<file>.md` draft with a relative path.
-   - Upload the final screenshots to the PR description or PR attachments before considering the evidence complete.
-   - Tell the user which files to upload to the PR description when manual upload is required.
-6. After the screenshots are uploaded to the PR, update the PR description.
-   - Group screenshots by surface area or scenario, not upload order.
-   - Add the corresponding route path or scenario above each image.
-   - Explain what each screenshot demonstrates.
-   - Do not mention "previously uploaded"; present the PR as one unified review artifact.
-   - If a screenshot is after-only, label it honestly as focused after evidence.
-
-Before/after PR description example:
-
-````md
-Screenshots:
-
-The before/after screenshots compare the baseline environment against the candidate deployment. They focus on the route surfaces affected by this PR.
-
-Main workflow before/after:
-
-- Scenario label: `/example/route`
-  <img ... />
-
-Settings surface before/after:
-
-- Scenario label: `/example/settings`
-  <img ... />
-
-Focused evidence:
-
-- Scenario label: `/example/focused-route`
-  <img ... />
-````
-
-## Deployed E2E
-
-After the relevant deployment is ready, repeat the browser workflow in the deployed environment. If a surface is unavailable in one environment, choose the closest supported equivalent and explain the difference in the PR evidence.
-
-For post-production deployment evidence after the PR is merged, a PR comment is acceptable and often preferable: the PR body already served its review purpose, and the comment records the deployed verification chronologically. Still use GitHub-hosted attachments, group screenshots by scenario, include production URLs and console/network notes, and avoid throwaway upload-only comments.
-
-## Checklist
-
-- [ ] Existing PR checked or new PR created.
-- [ ] PR template and deployment conventions discovered.
-- [ ] Relevant dev or preview browser evidence captured.
-- [ ] Browser screenshots captured.
-- [ ] Video used only when motion or timing materially improves the evidence.
-- [ ] Evidence video, when used, is one bounded scenario, 8–15 seconds preferred and no more than 30 seconds.
-- [ ] Evidence video dimensions, codec, duration, and size recorded; file is under 10 MB.
-- [ ] Evidence video captions, cursor/click visibility, sensitive-data safety, and browser playback verified.
-- [ ] Adjacent PR text provides the accessible equivalent of any video verdict.
-- [ ] E2E evidence drafted at `docs/tests/<platform>-<id>/<file>.md` unless the repository has a more specific documented convention.
-- [ ] Evidence screenshots stored under `docs/tests/<platform>-<id>/` and embedded in the draft with relative paths.
-- [ ] Final evidence screenshots uploaded or embedded in the actual GitHub PR.
-- [ ] Final evidence video, when used, uploaded once and rendered as a playable GitHub attachment in the PR body.
-- [ ] GitHub-hosted attachment URLs (`github.com/user-attachments/assets/...`) used when the user wants agent-uploaded screenshots in a GitHub PR/issue.
-- [ ] Each uploaded screenshot verified to have completed from `Uploading...` placeholder to a stable attachment URL before using it in the PR body or submitting an intentional comment.
-- [ ] Comment editor cleared after attachment upload when the PR body is the final evidence location.
-- [ ] PR comment count checked when the user asked for PR-body evidence or no redundant comments.
-- [ ] Evidence screenshots copied to an upload-ready directory when user will attach manually.
-- [ ] PR description updated with `## E2E evidence` near the repository's existing QA or checklist sections.
-- [ ] PR description updated with `<details><summary>Dev browser verification</summary>` or a more accurate environment label.
-- [ ] Deployment readiness confirmed when deployed evidence is needed.
-- [ ] Relevant deployed-environment browser evidence captured.
-- [ ] Baseline and candidate URLs identified when before/after evidence is used.
-- [ ] Matching baseline and candidate screenshots captured.
-- [ ] Source screenshots cropped to the meaningful UI before final upload.
-- [ ] Before/after interaction screenshots combined into paired annotated images when that is clearer than separate screenshots.
-- [ ] Final combined/annotated screenshots inspected for stale loading states, misleading crops, hidden labels, and excessive unrelated page content.
-- [ ] User uploaded screenshots to GitHub PR description when manual upload is required, or agent uploaded/embedded them when possible.
-- [ ] PR description updated with route paths or scenario labels and explanations for each screenshot.
-- [ ] Any after-only or non-parity screenshots are clearly labeled.
-- [ ] PR description updated with deployed-environment evidence when required.
-- [ ] Post-production deployment evidence posted as an intentional PR comment only after merge, when applicable.
-- [ ] Any earlier broken/raw-link evidence comment marked as superseded and linked to the rendered attachment-hosted evidence.
-- [ ] Temporary browser/evidence helpers stopped or cleaned up.
+**Complete when:** temporary processes and helpers are stopped, the worktree contains only intended durable files, published evidence is still accessible, and the owner has a concise verification summary.

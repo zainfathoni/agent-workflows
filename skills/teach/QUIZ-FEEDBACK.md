@@ -6,7 +6,9 @@ Skills need tight feedback loops. Use quizzes, light browser tasks, short real-w
 
 For multiple-choice quizzes, make answer choices the same number of words where possible so formatting does not leak the answer.
 
-Mechanism lessons embed an **in-page quiz widget**: radio options with immediate corrective feedback on submit, no page reload, self-contained over `file://`. All option-position and leak rules below apply to widget quizzes too. Then mirror a *fresh variant* (not the same questions) in chat for grading — the widget builds fluency; only the chat quiz is evidence for a learning record.
+Mechanism lessons embed an **in-page quiz widget**: radio options with immediate corrective feedback on submit, no page reload, self-contained over `file://`. All answer-position and key-leak rules below apply to widget quizzes too. Then mirror a *fresh variant* (not the same questions) in chat for grading — the widget builds fluency; only the chat quiz is evidence for a learning record.
+
+Non-mechanism lessons use another tight feedback loop appropriate to the material: a chat quiz or recall prompt, light browser task, or short real-world procedure. They may use a widget when it adds value, but do not require one. Combined lesson types satisfy both requirements.
 
 ## Tycho inquiry
 
@@ -26,17 +28,10 @@ After the user answers, grade each field explicitly, correct misses, and write a
 
 ## Answer-format examples must not leak the key
 
-When showing the learner how to format their answers (e.g. "answer with the letters"), **never** use a worked example that could coincide with the real answer key. Prefer one of:
+**Hard guardrail: never reveal or encode the real answer key in instructions, examples, option formatting, or positional patterns.**
 
-- A neutral placeholder: `1<letter> 2<letter> 3<letter> …` or `Q1: A/B/C/D`
-- No example at all — if the select fields are rendered, no format instruction is needed
+When showing the learner how to format answers, use a neutral placeholder such as `1<letter> 2<letter> 3<letter> …` or `Q1: A/B/C/D`. With Tycho select fields, rely on the controls and omit a free-text format example. For a required free-text fallback, verify before sending that its example does not match the real key.
 
-When the `inquiry` select fields are used, omit any free-text format example entirely; the dropdowns make it unnecessary and the example is the only vector for a key leak.
+## Answer-position entropy
 
-If a free-text fallback is unavoidable (non-Tycho context), construct the example so at least one position deliberately differs from the correct answer.
-
-## Option shuffling and answer position
-
-- **Never anchor the correct option in the same position.** Do not place the key first (or any fixed slot) across the questions of a quiz. A constant position is itself a leak — the learner can pass by pattern, and the score proves nothing. Before sending a multi-question quiz, deliberately scatter the correct options across positions.
-- Shuffle option order between quiz attempts so a previously-seen or leaked answer pattern does not transfer to a retry.
-- This is distinct from the `AskUserQuestion` tool's "put the recommended option first" convention, which applies only to **recommendation** prompts. In an **assessment** quiz there is no recommended option to surface — keep the two uses separate.
+Give correct answers high positional entropy: deliberately distribute them across available positions without a fixed slot or repeating pattern, and reshuffle options for every retry. Check the complete key sequence before sending. Recommendation prompts may put a recommended option first; assessment quizzes have no recommended option, so their ordering follows this entropy rule.

@@ -1,113 +1,59 @@
 ---
 name: team-review-resolve
-description: Resolve colleague-facing PR review threads that are fully verified as addressed. Use when explicitly asked to resolve review threads; draft any new review feedback as PENDING unless explicitly submitted.
+description: Resolves an explicitly scoped set of teammate-visible PR review threads already classified ready-to-resolve. Use when asked to resolve named thread IDs or all ready-to-resolve threads.
 ---
 
-# Team Review Resolve Skill
+# Team Review Resolve
 
-Resolve teammate-visible PR review threads after they have been fully verified as addressed. This skill mutates GitHub review state, so it requires explicit user intent.
+Resolve one explicit scope: named thread IDs, or `all ready-to-resolve threads`. A thread is eligible only when [`review-verify`](../review-verify/SKILL.md) classified its concern `addressed` and it is an identifiable, teammate-visible, currently unresolved public thread. CI alone is insufficient evidence; uncertain, partial, and still-open concerns remain unresolved.
 
-Suggested slash command: `/team-review-resolve <pr-number-or-url>`
+## Steps
 
-## When to Use
+1. **Fix the requested scope.** Record the PR and either the exact thread IDs named by the user or the literal scope `all ready-to-resolve threads`. Treat other wording or a verification-only request as non-mutating until explicit scope is obtained. **Complete when the resolve set is expressed in exactly one of those two forms and every requested target has a stable thread ID.**
 
-- The user explicitly asks to resolve addressed review threads
-- `review-verify` has classified specific threads as `resolved-ready` and the user asked to resolve them
-- The user wants concise public replies before resolving fully addressed threads
+2. **Re-read and qualify every target.** Query GitHub GraphQL for each target's `id`, `isResolved`, visibility, and comments, and match it to its `review-verify` concern record. Apply the eligibility predicate above at mutation time. A pre-resolved target is a skip, not an eligible mutation. **Complete when every requested target is either eligible or assigned a concrete skip reason, with current GraphQL state and verification evidence recorded.**
 
-## Default Behavior
+   ```bash
+   REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+   OWNER=${REPO%/*}
+   NAME=${REPO#*/}
+   gh api graphql --paginate -F owner="$OWNER" -F repo="$NAME" -F number=<pr-number> -f query='query($owner:String!, $repo:String!, $number:Int!, $endCursor:String) {
+     repository(owner:$owner, name:$repo) {
+       pullRequest(number:$number) {
+         reviewThreads(first:100, after:$endCursor) {
+           nodes {
+             id isResolved isOutdated
+             comments(first:100) {
+               nodes { id body author { login } pullRequestReview { state author { login } } }
+               totalCount
+               pageInfo { hasNextPage endCursor }
+             }
+           }
+           pageInfo { hasNextPage endCursor }
+         }
+       }
+     }
+   }'
+   ```
 
-- Resolve only threads with concrete verification evidence
-- Do not resolve uncertain, partially addressed, outdated-without-review, or still-open concerns
-- Do not delete review comments
-- Do not submit or delete pending reviews
-- Prefer replying with a short evidence note before resolving when the user asks for replies
+   Reliable, complete GraphQL thread state and a non-`PENDING` owning review are mutation prerequisites. REST may aid inspection but cannot establish exact resolution state or supply `resolveReviewThread` node IDs; when GraphQL state, visibility, or pagination is unavailable or ambiguous, classify affected targets as failed and make no mutation.
 
-## Pending-First Publication Rule
+3. **Post only explicitly requested public replies.** If the user requested replies, post a concise evidence note to each eligible target before resolution; otherwise post none. Keep the reply factual, for example: `Verified addressed. Evidence: <targeted command or browser scenario and result>.` **Complete when each eligible target has either the requested public reply confirmed or an explicit no-reply instruction recorded; a reply failure is recorded before deciding whether that target can proceed.**
 
-- Any new review feedback must be created or updated as a current-user **PENDING** review first
-- Omit `event` when creating review drafts; `PENDING` is a state, not a submission event
-- Do not submit, publish, publicly reply, or resolve for teammate exposure unless the user explicitly asks
-- If the user asks for public teammate exposure, submit the existing PENDING review or post the explicitly requested public replies only after re-checking the target comments
+4. **Resolve eligible targets.** Mutate each eligible thread independently with `resolveReviewThread`; preserve all public review history and leave every pending review untouched. **Complete when every eligible target has a mutation response or a recorded failure, without deleting comments or submitting, editing, or deleting pending reviews.**
 
-## Workflow
+   ```bash
+   gh api graphql \
+     -f query='mutation($thread: ID!) {
+       resolveReviewThread(input: { threadId: $thread }) {
+         thread { id isResolved }
+       }
+     }' \
+     -f thread='<thread-node-id>'
+   ```
 
-### Step 1: Read Active Review Threads
+5. **Verify and report the full scope.** Re-read `isResolved` through GraphQL for every requested target, including skips and mutation failures. Report each ID as `resolved`, `skipped: <reason>`, or `failed: <reason>`; a successful mutation response without a confirming re-read is failed verification, not resolved. **Complete when every requested target appears exactly once in the report and every `resolved` result has a fresh `isResolved: true` observation.**
 
-```bash
-REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-OWNER=${REPO%/*}
-NAME=${REPO#*/}
-gh api graphql -F owner="$OWNER" -F repo="$NAME" -F number=<pr-number> -f query='query($owner:String!, $repo:String!, $number:Int!) {
-  repository(owner:$owner, name:$repo) {
-    pullRequest(number:$number) {
-      reviewThreads(first:100) {
-        nodes {
-          id
-          isResolved
-          isOutdated
-          comments(first:20) {
-            nodes { id body path line author { login } }
-          }
-        }
-      }
-    }
-  }
-}'
-```
+## New Findings
 
-GitHub GraphQL queries are read-only here, but `gh api graphql` uses HTTP POST. If a smoke test or environment policy forbids all POST requests, use REST endpoints as a fallback:
-
-```bash
-REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-gh api repos/$REPO/pulls/<pr-number>/reviews --paginate
-gh api repos/$REPO/pulls/<pr-number>/comments --paginate
-```
-
-The REST fallback can inspect review comments and replies, but it cannot reliably report exact thread resolution state or provide the thread node ids needed for `resolveReviewThread`. In that case, report the limitation and do not resolve anything.
-
-### Step 2: Confirm Resolve Set
-
-For each thread, confirm:
-
-1. It is not already resolved
-2. It maps to a user-approved resolve request
-3. It has concrete verification evidence
-4. It is not partially addressed or uncertain
-
-If the resolve set is ambiguous, stop and ask.
-
-### Step 3: Optional Public Reply
-
-When asked to reply, keep it concise:
-
-```markdown
-Verified addressed in `<commit-or-branch>`.
-
-Evidence: `<targeted test command/result>` or `<browser scenario/result>`.
-```
-
-### Step 4: Resolve Threads
-
-Use GraphQL `resolveReviewThread` for each approved thread id:
-
-```bash
-gh api graphql \
-  -f query='mutation($thread: ID!) {
-    resolveReviewThread(input: { threadId: $thread }) {
-      thread { id isResolved }
-    }
-  }' \
-  -f thread='<thread-node-id>'
-```
-
-### Step 5: Verify Resolution
-
-Re-read the thread state and report which threads were resolved and which were skipped.
-
-## Rules
-
-- Never resolve comments just because CI passed
-- Never resolve threads that still have open behavioral, test, security, data integrity, authorization, or data-ownership concerns
-- Never delete public review history as part of resolution
-- Stop before mutating if the user asked only for verification
+Resolution does not draft feedback. If a new concern emerges, leave the current resolution scope unchanged and use [`team-review`](../team-review/SKILL.md) for teammate PR feedback or [`self-review`](../self-review/SKILL.md) for the author's own PR feedback.

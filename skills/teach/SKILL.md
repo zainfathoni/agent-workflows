@@ -9,14 +9,14 @@ The user wants a stateful, multi-session learning workspace.
 
 ## Start here
 
-1. Treat the current directory as the teaching workspace unless the request points at a specific workspace or source. For source-derived workspace naming and local-owned preservation rules, use [WORKSPACE.md](./WORKSPACE.md).
-2. Read existing workspace state before teaching: `MISSION.md`, `RESOURCES.md`, `HOSTING.md` if present, `NOTES.md`, `learning-records/`, `lessons/`, `reference/`, and `assets/`. In a git-backed, multi-machine workspace, `git fetch` first and check the remote for an existing set — hosting a lesson elsewhere is not the same as sharing it, so another machine's work may exist but be unfetched (see [WORKSPACE.md](./WORKSPACE.md) "Shared repository sync"). Commit and push any lesson set you author right away.
-   If this is a new workspace, create files lazily in this order: `MISSION.md`, `RESOURCES.md` when sources are needed, `NOTES.md` when preferences or working notes exist, then `assets/`, `lessons/`, `reference/`, and `learning-records/` only when the first artifact in each category is earned.
-3. If `MISSION.md` is missing or vague, interview for the concrete outcome first. Use [MISSION-FORMAT.md](./MISSION-FORMAT.md).
-4. Choose the next lesson from the mission and the learner's zone of proximal development. Use [TEACHING-MODEL.md](./TEACHING-MODEL.md) for the philosophy, learning records, resources, and wisdom/community rules.
-5. When creating or revising lessons, reference docs, assets, source-code links, or hosted URLs, follow [LESSON-RULES.md](./LESSON-RULES.md).
-6. When running quizzes or asking for lesson-direction choices, follow [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md).
-7. Record durable learning only when evidenced. Use [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md). Put transient preferences and working notes in `NOTES.md`.
+1. Treat the current directory as the teaching workspace unless the request points at a specific workspace or source. Follow [WORKSPACE.md](./WORKSPACE.md) for authoritative workspace naming, state preservation, shared-repository sync, and local-owned guardrails. **Complete when:** the canonical workspace, source, ownership mode, and sync state are explicit.
+2. Read existing workspace state before teaching: `MISSION.md`, `RESOURCES.md`, `HOSTING.md` if present, `NOTES.md`, `learning-records/`, `lessons/`, `reference/`, and `assets/`. When the workspace is a shared git repository, perform the remote check and immediate authored-lesson commit/push workflow in [WORKSPACE.md](./WORKSPACE.md).
+   If this is a new workspace, create files lazily in this order: `MISSION.md`, `RESOURCES.md` when sources are needed, `NOTES.md` when preferences or working notes exist, then `assets/`, `lessons/`, `reference/`, and `learning-records/` only when the first artifact in each category is earned. **Complete when:** every existing state source has been read and each missing artifact is either earned by this run or left absent.
+3. If `MISSION.md` is missing or vague, follow the authoritative interview, format, and revision rules in [MISSION-FORMAT.md](./MISSION-FORMAT.md). **Complete when:** `MISSION.md` states a concrete learning outcome and current revision evidence, or the unanswered mission question is the explicit blocker.
+4. Choose the next lesson from the mission and the learner's zone of proximal development. Use [TEACHING-MODEL.md](./TEACHING-MODEL.md) for the philosophy, learning records, resources, and wisdom/community rules. **Complete when:** one next lesson has a stated mission link, prerequisite basis, and single intended win.
+5. When creating or revising lessons, reference docs, assets, source-code links, or hosted URLs, follow [LESSON-RULES.md](./LESSON-RULES.md). **Complete when:** every artifact created or revised in this run passes the applicable lesson, source, asset, and hosting rules.
+6. When choosing or running a feedback loop, including quizzes and lesson-direction choices, follow the authoritative rules in [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md). **Complete when:** the selected feedback loop has a recorded learner response and rule-compliant next action, or is explicitly deferred by the learner.
+7. Record durable learning only when evidenced. Use [LEARNING-RECORD-FORMAT.md](./LEARNING-RECORD-FORMAT.md). Put transient preferences and working notes in `NOTES.md`. **Complete when:** every new durable claim cites evidence, transient notes remain in `NOTES.md`, and no unsupported learning claim was recorded.
 
 ## Workspace files
 
@@ -28,7 +28,3 @@ The user wants a stateful, multi-session learning workspace.
 - `assets/*` — reusable components shared across lessons.
 - `learning-records/*.md` — evidenced learning, prior knowledge, misconceptions corrected, or mission shifts.
 - `NOTES.md` — scratchpad for teaching preferences and working notes.
-
-## Local-owned guardrail
-
-This `teach` skill is local-owned. Upstream changes are input, not authority: adopt them only when they improve teaching without weakening the local delta in [WORKSPACE.md](./WORKSPACE.md). Conflicts require explicit grilling acceptance before changing local `teach`.

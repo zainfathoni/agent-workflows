@@ -8,7 +8,7 @@ usage() {
 Usage: setup-bta-worktree.sh [options] <worktree> [<worktree> ...]
 
 Options:
-  --canonical PATH   Canonical BookThatApp worktree. Default: ../bookthatapp
+  --canonical PATH   Canonical BookThatApp worktree. Default: current repo root, otherwise ../bookthatapp
   --notes-root PATH  BookThatApp claude-notes project root. Default: resolved from canonical .claude symlink
   -h, --help         Show this help.
 

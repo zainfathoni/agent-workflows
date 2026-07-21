@@ -1,127 +1,28 @@
 ---
 name: creating-bta-worktrees
-description: Creates and repairs BookThatApp sibling worktrees with matching local bta/* branches, shared Claude/notes symlinks, and Docker-safe local runtime files. Use when creating, standardizing, or fixing ../bta-* worktrees.
+description: Creates or repairs BookThatApp sibling worktrees with local bta/* branches, shared symlinks, and Docker-safe runtime files. Use for new or existing ../bta-* worktrees.
 ---
 
 # Creating BTA Worktrees
 
-Create and standardize sibling BookThatApp worktrees in the parent directory using the local `bta/*` branch convention, shared Claude/notes symlinks, and Docker-safe runtime files.
+Dispatch the request to exactly one script branch. Treat each script's `--help` and source as the single source of truth for its managed options and file inventories.
 
-## When to use
+## Shared safety gates
 
-- The user asks to create a BookThatApp worktree such as `bta-debug`, `bta-teach`, or another `bta-*` sibling.
-- The user asks to repair, standardize, or re-apply local setup to existing BookThatApp worktrees.
-- The user reports local worktree runtime issues caused by missing `.env.development.local`, Traefik cert/key files, or `routes.local.toml`.
+- Resolve the directory containing this `SKILL.md` to an absolute `skill_dir`, then set `create_script="$skill_dir/scripts/create-bta-worktree.sh"` and `setup_script="$skill_dir/scripts/setup-bta-worktree.sh"`. Verify both are executable and use only these absolute variables for script help and execution.
+- If the user asked only for a plan, present the plan and wait for approval before running the create branch.
+- Keep branches local: fetch nothing, push nothing, and create no remote branch.
+- Preserve existing paths and real per-worktree runtime files. The scripts refuse an existing create target and skip real runtime files; surface either outcome instead of replacing anything manually.
+- Record `git status --short --branch` for every existing target before mutation so pre-existing dirt can be distinguished from setup effects.
 
-## Core rules
+## Branch 1 — create
 
-- Plan first when the user asks for a plan. Do not create worktrees until the user approves.
-- Prefer local-only git operations. Do not push branches or create remote branches unless explicitly requested.
-- Do not overwrite existing directories, branches, or real per-worktree runtime files without explicit approval.
-- Use the embedded scripts as the source of truth instead of copy-pasting shell snippets.
-- Keep runtime files as hard links or copies, not absolute symlinks, because Docker containers cannot read absolute macOS symlink targets inside a mounted worktree.
+1. Translate the requested sibling name from `bta-*` to its matching local `bta/*` branch intent. Choose only a base branch that exists locally; use the default only after confirming it is local. Record the current worktree's status. Read `"$create_script" --help` and source when managed options or exact behavior matter. Read [REFERENCE.md](REFERENCE.md#create-invocations) when selecting an invocation or non-default option. This step is complete when the target, derived branch, local base, canonical source, lock intent, and pre-create dirt are explicit; locking remains the default.
+2. From a BookThatApp worktree, run `"$create_script"` once with the approved name and required options. Let it create the local branch/worktree and invoke setup; runtime files remain hard links where possible and copies otherwise, while managed symlinks are refreshed. This step is complete when the script succeeds, or its refusal/error is preserved and reported without manual bypass.
+3. Inspect the resulting worktree registration, branch, lock state, status, and every runtime result emitted by setup. Read [REFERENCE.md](REFERENCE.md#verification-and-runtime-diagnosis) when verifying the result or diagnosing runtime failures. This branch is complete only when the report accounts for the target path, branch used or created, lock outcome, every runtime file as applied/skipped/missing/bad, and any pre-existing dirt.
 
-## Worktree convention
+## Branch 2 — repair
 
-Derive the local branch name by replacing the first hyphen with a slash:
-
-- `bta-debug` → `bta/debug`
-- `bta-teach` → `bta/teach`
-
-Default base branch is local `bta/main` when it exists. If it does not exist, inspect the repo before choosing a base.
-
-## Create a new worktree
-
-Run `scripts/create-bta-worktree.sh` from the current BookThatApp worktree or pass explicit options:
-
-```bash
-skills/creating-bta-worktrees/scripts/create-bta-worktree.sh bta-debug
-```
-
-The script:
-
-1. Verifies the current repo is a git worktree.
-2. Derives the local branch name, for example `bta-debug` → `bta/debug`.
-3. Creates the branch from `bta/main` when missing.
-4. Adds a locked sibling worktree, for example `../bta-debug`.
-5. Runs `scripts/setup-bta-worktree.sh` for the new worktree.
-
-Useful options:
-
-```bash
-scripts/create-bta-worktree.sh --base bta/main bta-debug
-scripts/create-bta-worktree.sh --no-lock bta-debug
-scripts/create-bta-worktree.sh --canonical ../bookthatapp bta-debug
-```
-
-## Repair or standardize existing worktrees
-
-Run `scripts/setup-bta-worktree.sh` for one or more worktrees:
-
-```bash
-skills/creating-bta-worktrees/scripts/setup-bta-worktree.sh ../bta-debug ../bta-teach
-```
-
-To apply to all sibling BTA worktrees from any BookThatApp worktree:
-
-```bash
-git worktree list --porcelain |
-  awk '/^worktree / {print $2}' |
-  grep '/bta-' |
-  sort |
-  xargs skills/creating-bta-worktrees/scripts/setup-bta-worktree.sh
-```
-
-The setup script refreshes common top-level symlinks:
-
-- `.agents`
-- `.claude`
-- `.envrc`
-- `.mcp.json`
-- `CLAUDE.md`
-- `CONTEXT.md`
-- `PATTERNS.md`
-- `docs`
-- `scripts`
-- `teach`
-
-It also hard-links or copies Docker/local-runtime files from the canonical `bookthatapp` worktree when missing or already symlinks:
-
-- `.env.development.local`
-- `docker/development/traefik/bookthatapp.internal.crt`
-- `docker/development/traefik/bookthatapp.internal.key`
-- `docker/development/traefik/routes.local.toml`
-
-The script skips real per-worktree runtime files rather than overwriting them.
-
-## Why runtime files are not symlinked
-
-Do not use absolute symlinks for runtime files. Docker mounts the worktree into app and Traefik containers; an absolute macOS symlink target such as `/Users/zain/...` is not readable inside the container.
-
-Symptoms this prevents:
-
-- Traefik cannot find PEM data for TLS cert/key files.
-- Rails boot fails because `.env.development.local` is missing, such as `ShopifyAPI::Context.setup` receiving a nil API key.
-- Local URLs return Traefik 404s when `routes.local.toml` is unavailable and Traefik cannot discover Docker routes.
-
-## Verification
-
-After creating or repairing worktrees, verify:
-
-```bash
-git worktree list --porcelain
-git -C ../bta-debug status --short --branch
-git -C ../bta-teach status --short --branch
-```
-
-For runtime files, `setup-bta-worktree.sh` prints `OK runtime file` only when each runtime file is non-empty and not a symlink.
-
-## User-facing summary
-
-When done, report:
-
-- Worktrees created or repaired.
-- Branches used or created.
-- Whether worktrees were locked.
-- Runtime files applied, skipped, or missing.
-- Verification results and any pre-existing dirty worktree state.
+1. Resolve every requested existing worktree target and canonical source. Read `"$setup_script" --help` and source when managed options, symlink inventory, runtime inventory, or exact behavior matter. Read [REFERENCE.md](REFERENCE.md#repair-invocations) when discovering all sibling BTA worktrees or selecting a repair invocation. This step is complete when every target exists and its pre-repair status has been recorded.
+2. Run `"$setup_script"` once with all targets and required options. Let it refresh managed symlinks, preserve real paths and runtime files, and install missing/symlinked runtime files as hard links or copies. This step is complete when the script succeeds for every target, or the exact target and refusal/error are preserved for reporting.
+3. Inspect every target's branch, lock state, status, symlink results, and runtime results. Read [REFERENCE.md](REFERENCE.md#verification-and-runtime-diagnosis) when verifying the result or diagnosing runtime failures. This branch is complete only when the report accounts for every target, its branch, lock outcome, every managed symlink result, every runtime file as applied/skipped/missing/bad, and any pre-existing dirt.

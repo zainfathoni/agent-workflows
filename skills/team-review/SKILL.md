@@ -1,110 +1,50 @@
 ---
 name: team-review
-description: Review a teammate's PR and prepare colleague-ready feedback in a current-user PENDING review first. Use when reviewing teammate PRs, drafting inline comments, approvals, requests for changes, or team-facing review summaries.
+description: Reviews teammate PRs and drafts evidence-backed feedback in a current-user PENDING review. Use for colleague-facing review before publication.
 ---
 
-# Team Review Skill
+# Team Review
 
-Review a teammate's pull request for correctness, regressions, security, performance, maintainability, and missing tests. This is a colleague-facing workflow; comments may become visible to teammates when the user explicitly asks to publish or submit them.
+Produce a rigorous colleague-facing review without publishing feedback prematurely. Every review is drafted and verified as `PENDING` before any explicit submission.
 
-Suggested slash command: `/team-review <pr-number-or-url>`
+Suggested command: `/team-review <pr-number-or-url>`
 
-## When to Use
+## Invariants
 
-- The user asks to review a teammate's PR
-- The user wants public or publishable review feedback
-- The user asks for inline comments, approval, request changes, or a team-facing review summary
-
-## Default Behavior
-
-- Inspect the actual diff and relevant code before commenting
-- Prioritize bugs, regressions, data integrity, authorization, data ownership, security concerns, and missing tests
-- Keep findings specific and actionable with file/line references
-- Conduct an independent review first; do not let an existing current-user PENDING review steer the initial findings pass
-- After independent findings are complete, use the `self-review` flow to reconcile and create or update the teammate-facing PENDING review draft
-- For correctness findings, try to prove the case with a focused failing test, existing test gap, or browser/manual evidence before publishing; use the `tdd` skill's one-test-at-a-time proof discipline when feasible, but keep public comments focused on the verified behavior rather than internal process labels
-- Do not submit a GitHub review unless the user explicitly asks
-- If preparing a pending review, make clear it is teammate-facing and may be submitted later
-- Never use the REST pull request comments endpoint (`POST /pulls/<pr-number>/comments`) while drafting; it publishes immediately instead of adding to a pending review
+- Review independently before reading existing current-user pending feedback.
+- Inspect every changed risk area: correctness, regressions, authorization and data ownership, security, performance, maintainability, and tests.
+- Give every finding a severity, concrete impact, supporting evidence, and confidence. Do not publish unsupported suspicions.
+- Use [`self-review`](../self-review/SKILL.md) as the sole authority for pending-review creation, inventory, reconciliation, mutation, suggestions, and verification. Do not duplicate or improvise those mechanics here.
+- Never use the REST pull-comment endpoint (`POST /pulls/{pull_number}/comments`) for draft feedback; it publishes immediately.
+- Never submit without an explicit instruction naming `COMMENT`, `APPROVE`, or `REQUEST_CHANGES`.
+- Never approve while unresolved correctness, security, data-integrity, authorization, or data-ownership concerns remain.
 
 ## Workflow
 
-### Step 1: Read PR Context
+### 1. Review the change independently
 
-```bash
-git status --short --branch
-gh pr view <pr-number> --json number,title,headRefName,baseRefName,author,url,reviewDecision,statusCheckRollup
-gh pr diff <pr-number>
-```
+Read the PR context, full diff, changed files, relevant call sites, tests, ownership boundaries, and repository guidance. Classify changed areas by risk and verify behavior against implementation rather than assumptions. Do not inspect an existing pending draft yet.
 
-If a narrower hunk is needed, prefer local diffing:
+**Complete when:** all changed risk areas have been inspected, or each unverified area has an explicit residual-risk note.
 
-```bash
-gh pr view <pr-number> --json baseRefName,headRefName
-git diff --unified=20 origin/<base-ref>...origin/<head-ref> -- path/to/file
-```
+### 2. Establish colleague-ready findings
 
-### Step 2: Inspect Relevant Code
+For each concern, record severity, changed-side path and line, concrete failing scenario and impact, evidence, confidence, and a useful fix direction. Prefer a focused failing test and use the `tdd` skill's one-test-at-a-time proof discipline when feasible; otherwise use browser behavior, logs, API output, or a direct code-path proof. Keep public wording concise and actionable, and remove temporary proof-only changes.
 
-- Read changed files and nearby call sites
-- Search for shared helpers, tests, API transformers, authorization checks, and data ownership boundaries
-- Verify claims against implementation rather than assumptions
+Order findings by severity. If there are none, state that and identify testing gaps or residual risks.
 
-### Step 3: Prove Actionable Findings
+**Complete when:** every finding has evidence and confidence, and unsupported concerns have been omitted or clearly retained only as residual risk.
 
-For each potential blocking finding:
+### 3. Create and verify the pending draft
 
-- Prefer a focused test or existing test change that demonstrates the behavior fails
-- If a test is impractical, use browser evidence, logs, API responses, or a code-path proof
-- Remove any temporary proof-only test or instrumentation before finishing unless the user asked you to keep it
-- In teammate-facing inline comments, show the concrete failing scenario and impact. For findings proven by a focused failing test, include the important setup and failing assertion as a compact test snippet the author can copy, not process labels or proof jargon. Mention temporary local-only test mechanics only if the user explicitly wants that detail published
+Only after the independent finding set is complete, follow `self-review` end to end to inventory, create or reconcile, and verify the current user's single pending review. The final body and comments must be complete, exact, colleague-ready, and still unpublished.
 
-If proof is not feasible within the review pass, say why and mark the confidence level.
+**Complete when:** `self-review` verification proves the complete reconciled draft belongs to the authenticated user, contains exactly the intended feedback, and remains `PENDING`.
 
-### Step 4: Produce Findings
+### 4. Decide publication
 
-Return findings first, ordered by severity. Include:
+Recommend `COMMENT`, `APPROVE`, or `REQUEST_CHANGES` from the verified findings and severity. Any unresolved correctness, security, data-integrity, authorization, or data-ownership concern prevents approval. Unless the user has already explicitly authorized a named event, report the recommendation and stop with the draft pending.
 
-- File and line
-- The concrete risk
-- Why the current code causes it
-- A focused suggestion when useful
+If explicitly authorized, follow [`self-review`'s submission boundary](../self-review/SKILL.md#explicit-submission-boundary) to submit and verify the existing pending review; never create another review.
 
-If no findings are found, say so and mention residual risks or testing gaps.
-
-### Step 5: Draft as PENDING First
-
-Before any teammate-visible submission, create or update a current-user **PENDING** GitHub review using the `self-review` workflow. If a current-user PENDING review already exists, reconcile it only after Steps 1-4 are complete:
-
-- Omit `event` so the review stays pending
-- Complete the independent review findings first, then fetch the existing pending review body and inline comments
-- Compare independent findings against the existing pending review one comment at a time
-- Keep or merge existing pending comments only when they are independently confirmed, still relevant, and teammate-ready
-- Dismiss existing pending comments that are invalid, stale, duplicate, superseded, or not supported by the independent review evidence; note the reason in the final summary instead of carrying them forward
-- Rewrite partially right comments so the final draft states only the verified concern and avoids over-claiming
-- Replace an existing pending review with the complete reconciled comment set rather than stacking drafts
-- Keep comments colleague-ready, but pending until the user explicitly asks to submit or publish them for teammate exposure
-- If a comment is backed by a focused failing test, format it as: concise issue, "Minimal failing case:" with only the necessary test lines, the failing expectation/received value, then the requested fix direction
-- If a pending inline comment needs a GitHub ````suggestion` block, follow `self-review`'s GraphQL `addPullRequestReviewThread` workflow attached to the pending review `node_id`; the simple REST review `comments` array can fail to render an applyable Suggested change, and the REST pull request comments endpoint will publish immediately
-
-### Step 6: Submit Only When Asked
-
-When the user explicitly asks to submit or publish a GitHub review for teammate exposure, submit the existing current-user PENDING review with `COMMENT`, `APPROVE`, or `REQUEST_CHANGES` as requested. If the user asks generally whether to request changes, recommend based on severity, then wait for confirmation unless they already gave permission to submit.
-
-```bash
-cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --method POST --input -
-{
-  "body": "Review summary",
-  "comments": [
-    { "path": "path/to/file.js", "line": 42, "body": "Comment body" }
-  ]
-}
-EOF
-```
-
-## Rules
-
-- Use self-review pending-review safety rules before teammate-facing publication, not as a substitute for teammate-facing clarity
-- Do not submit reviews unless explicitly asked
-- Do not approve if unresolved correctness, security, data integrity, authorization, or data-ownership concerns remain
-- Do not comment on unchanged lines unless using a top-level PR comment is more appropriate
+**Complete when:** either the verified draft remains pending with a publication recommendation, or the existing draft was explicitly submitted and its resulting publication state and visibility were re-read and reported.

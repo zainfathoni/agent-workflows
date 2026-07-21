@@ -9,7 +9,7 @@ Start each workspace from [lesson-template.html](./lesson-template.html): seed t
 Every lesson should:
 
 - embed a micro-world when the topic is a mechanism (see "Micro-worlds" below);
-- embed an in-page quiz widget (see [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md));
+- include the feedback loop required for its lesson type (see "Lesson types and feedback" below and [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md));
 - be beautiful, readable, and accessible;
 - include viewport metadata and WCAG AA body-text contrast;
 - keep dark callout boxes legible by overriding nested `code`/`pre` colours;
@@ -17,6 +17,22 @@ Every lesson should:
 - link to related lessons and reference docs;
 - recommend one primary high-trust source;
 - remind the user to ask follow-up questions.
+
+## Lesson types and feedback
+
+- A **mechanism lesson** teaches how a system changes state, makes decisions, or produces consequences. It requires both an embedded micro-world and an embedded in-page quiz widget, followed by a fresh-chat quiz variant as specified in [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md).
+- A **non-mechanism lesson** teaches a fact, concept, glossary distinction, routine, or procedure without an internal system to simulate. It does not require an embedded widget. It requires another tight feedback loop chosen from [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md), such as a recall prompt, short browser task, or real-world procedure.
+
+Classify the lesson by what the learner must understand, not by whether JavaScript would be easy to add. If a lesson combines types, satisfy every applicable type rule.
+
+## Completion criterion
+
+An ordinary lesson is complete only when **all** of the following are true:
+
+1. It satisfies every general lesson-shape rule and every applicable lesson-type rule in this document and [QUIZ-FEEDBACK.md](./QUIZ-FEEDBACK.md).
+2. It delivers one mission-linked, demonstrable win rather than mere coverage.
+3. Every included link and asset works in the chosen delivery mode (`file://`, local server, or documented host).
+4. The handoff is verified: open or request the delivered lesson through that mode, exercise its feedback loop and any interactivity, and verify the URL before sharing when hosted.
 
 ## Micro-worlds
 
@@ -79,6 +95,8 @@ When a lesson/reference cites real source code, include both links:
 - pinned GitHub permalink: `https://github.com/<owner>/<repo>/blob/<commit-SHA>/<repo-rel-path>#L<line>`.
 
 Re-derive line numbers against the exact commit before linking. Render both as small source chips (`.vsc` and `.gh`) under the relevant code block. The GitHub permalink is the portable link for phones, tablets, shared docs, and hosted lessons.
+
+PR labels, reviewer objections, diff blocks, and source chips in [lesson-template.html](./lesson-template.html) are optional, codebase-derived template content. Include them only when the lesson is actually derived from a PR or codebase; replace every placeholder with verified repository data. Omit the entire inapplicable block rather than shipping placeholder text. When source chips are applicable, the dual-link rule above remains mandatory.
 
 ## Reference documents
 

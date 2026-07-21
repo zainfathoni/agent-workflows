@@ -1,79 +1,55 @@
 ---
 name: review-address
-description: Address PR review comments with TDD, focused fixes, verification, and safe reply handling for current-user pending reviews or teammate-visible threads. Use when fixing issues raised in PR review comments, whether they came from a self-review draft or teammate feedback.
+description: Addresses PR review claims with focused, verified fixes and source-aware follow-up. Use for current-user pending comments or teammate-visible threads.
 ---
 
-# Review Address Skill
+# Review Address
 
-Address pull request review comments end-to-end: verify each concern, group shared root causes, make narrow fixes, run targeted verification, and update review threads only when explicitly asked.
+Treat review comments as claims to verify, then make the smallest supported fix. Preserve a concern record compatible with `review-verify`: source and stable identifier, visibility, exact concern, status, code mapping, test evidence, browser evidence when needed, and gap.
 
-Suggested slash command: `/review-address <pr-number-or-url>`
+Suggested invocation: `/review-address <pr-number-or-url>`
 
-## When to Use
+## Review-State Safety Gate
 
-- The user asks to address PR review comments instead of performing a fresh review
-- The PR has inline review comments, pending draft comments, or teammate-visible review threads
-- The goal is to fix code and optionally reply to addressed comments
+Apply this gate before **every** protected operation. It is the authoritative safety rule for replies, resolution, commit, push, and submission.
 
-## Default Behavior
+- Identify the authenticated GitHub user, review owner and state, thread identity and resolution state, and intended resulting visibility. Classify the source as exactly one of `current-user-pending`, `teammate-visible`, or `ambiguous`.
+- Require explicit user intent for each operation independently: public reply, thread resolution, commit, push, or pending-review submission. Permission for one operation does not imply another.
+- For a `current-user-pending` source, keep replies in that same pending review. Never submit or delete the review to enable a reply, and never substitute a public issue comment.
+- For a `teammate-visible` source, make a public reply or resolve its public thread only when that specific public action was requested. Keep any new feedback in a current-user pending review unless publication was explicitly requested.
+- Route every pending-review deletion request to [`review-clear`](../review-clear/SKILL.md); this skill never performs that destructive operation.
+- Stop before any protected operation when ownership, state, thread identity, requested operation, or resulting visibility is ambiguous. Also stop rather than crossing an API/schema contract, exceeding roughly 200 changed lines, choosing between conflicting comments, or expanding into an unapproved architectural change.
 
-- Treat review comments as claims to verify, not assumptions to rubber-stamp
-- Prefer one focused failing test followed by the minimal fix for actionable regressions
-- When a review comment is supported by a failing test, include the relevant setup and failing assertion as a compact snippet without process labels
-- Group comments by shared root cause and fix the shared root once
-- Keep fixes narrow and localized
-- Do not commit, push, reply, resolve, submit, or delete review artifacts unless explicitly asked
-- Preserve current-user PENDING review state unless the user explicitly asks to submit or delete it
-- Use public replies only when the user explicitly wants teammate-visible replies
+The gate passes only when the source and visibility are proven, the exact operation and resulting visibility are explicitly authorized, and no stop condition applies. Workflow and follow-up steps below do not relax this gate.
 
-## Source-Specific Safety
+## Reply Semantics
 
-### Current-user PENDING review comments
+Choose exactly one outcome per thread:
 
-- Verify the comment belongs to the current GitHub user and the review state is `PENDING` before using pending-review reply APIs
-- Reply inside the same pending review thread instead of creating a public issue comment
-- Do not submit the review event or work around GitHub reply restrictions by submitting the review
-- If ownership or visibility is unclear, stop before replying
+- **Fixed** — state the exact behavior change and verification evidence; include a commit SHA only if a commit was explicitly requested and created.
+- **Not actionable** — explain which claim is unsupported or no longer applies and cite the evidence.
+- **Deferred** — name the blocker, remaining gap, and follow-up owner or tracking item.
 
-### Teammate-visible review comments
-
-- Public replies and thread resolution are allowed only when explicitly asked
-- Resolve only comments that are fully verified as addressed
-- Do not submit, delete, or modify current-user pending reviews as part of teammate-visible follow-up unless explicitly asked
-- If adding new review feedback while addressing teammate comments, create it as a current-user PENDING review first
+Use `review-verify` status vocabulary in the concern record: `addressed`, `still-open`, `uncertain`, or `not-applicable`. `ready-to-resolve` is not a status; derive it only for an identifiable, teammate-visible, unresolved public thread whose concern is `addressed`. Resolution still requires explicit intent and a passing Review-State Safety Gate.
 
 ## Workflow
 
-1. Read PR metadata, reviews, review comments, and active review threads.
-2. Classify each thread as `current-user-pending`, `teammate-visible`, or `ambiguous`.
-3. Triage each concern as actionable, non-actionable, or deferred.
-4. Group actionable comments by shared root cause and decide commit boundaries.
-5. Inspect real code paths before editing.
-6. Add or update focused tests first when practical, then fix minimally.
-7. Run touched tests immediately and then as a regression batch.
-8. Commit or push only when explicitly requested.
-9. Reply or resolve only when explicitly requested, using the source-specific safety rules above.
+1. **Inventory review state and intent.** Read PR metadata, review bodies, inline comments, active threads, current-user pending reviews, current head, and the user’s requested mutations. Include summary-only, outdated, and squash-obscured concerns. Use [REFERENCE.md](REFERENCE.md#read-pr-and-review-state) for mechanics. **Complete when every discovered thread and summary-only concern has a stable source identifier, every discovered thread is classified as `current-user-pending`, `teammate-visible`, or `ambiguous`, and every requested or unrequested mutation is recorded separately.**
 
-## Reply Shapes
+2. **Verify and triage every claim.** Inspect the current code path and relevant history rather than assuming the comment is correct. Assign each concern one `review-verify` status, with code mapping and existing evidence; route genuinely non-applicable claims without editing. **Complete when every discovered concern has an exact claim, current code mapping or no-mapping explanation, status with rationale, and explicit evidence gap (including `none`).**
 
-Pick exactly one shape per thread:
+3. **Group actionable concerns by root cause.** Combine comments only when the same implementation defect explains them, choose the narrowest correction, and identify focused test and commit boundaries without committing. Keep unrelated concerns separate. **Complete when every `still-open` actionable concern belongs to one justified root-cause group with a minimal fix plan and test plan, while every other concern has a documented no-change reason or blocker.**
 
-- `Fixed`: include commit SHA, exact behavior change, and verification evidence.
-- `Not actionable`: explain why no code change is needed.
-- `Deferred`: explain the blocker or follow-up tracking.
+4. **Prove the defect and fix minimally.** When practical, add or adjust the smallest focused test that fails for the supported claim, then make only the change needed for that root cause. Preserve the relevant setup and failing assertion as compact evidence; do not narrate red/green process labels. **Complete when every actionable root-cause group has a focused pre-fix failure or a stated reason that such a test is impractical, and its implementation change is limited to the demonstrated cause.**
 
-Use pending-review replies for `current-user-pending` threads. Use public replies only for `teammate-visible` threads and only when explicitly asked.
+5. **Verify each concern.** Run touched tests immediately, then the smallest regression batch spanning each root-cause group; use browser evidence where user-visible behavior is not established by tests. Update every concern record using `review-verify` evidence and status rules. Use [REFERENCE.md](REFERENCE.md#targeted-verification) for command examples. **Complete when every actionable concern has fix and verification evidence establishing `addressed`, or is `still-open`/`uncertain` with a concrete blocker and gap, and every non-actionable concern has evidence for `not-applicable` or its remaining status.**
 
-## Stop Conditions
+6. **Perform only authorized repository operations.** Apply the Review-State Safety Gate separately to commit and push intent; keep commits aligned to justified root-cause groups when requested. **Complete when each explicitly requested commit or push has passed the gate and has evidence of success, and every unrequested, ambiguous, or blocked repository operation remains unperformed with its reason recorded.**
 
-Stop before committing or replying when:
+7. **Prepare and perform source-aware follow-up.** Select one Reply Semantics outcome per thread. Read [REFERENCE.md](REFERENCE.md#reply-templates) when drafting a fixed, not-actionable, or deferred reply. Apply the Review-State Safety Gate independently before any pending reply, public reply, resolution, or submission; use [REFERENCE.md](REFERENCE.md#review-mutation-api) only for API mechanics. Route a requested deletion to `review-clear` and resume only after its separate verification. **Complete when every discovered thread has a selected outcome or explicit blocker, every requested follow-up has fix/verification evidence or a blocker, each performed mutation has confirmed source and resulting visibility, deletion requests have a `review-clear` disposition, and no unrequested submission, resolution, reply, commit, or push occurred.**
 
-- A single fix would exceed ~200 LoC of code change
-- The fix requires an API contract change, schema change, or cross-team alignment
-- The fix exposes a deeper architectural problem that the comment did not flag and the user did not pre-approve
-- Two or more comments disagree about the desired behavior
-- Comment ownership or visibility is ambiguous
+8. **Report exhaustively.** Report each concern record, root-cause grouping, changed files, exact verification results, blockers, performed mutations, and deliberately unperformed operations. **Complete when every discovered concern and thread is accounted for, every actionable thread has fix/verification evidence or a blocker, and the report makes ownership, visibility, operation intent, and remaining gaps explicit.**
 
 ## Reference
 
-See [REFERENCE.md](REFERENCE.md) for GitHub API commands, pending-review reply mutations, test command examples, and full reply templates.
+Read [REFERENCE.md](REFERENCE.md) only when a workflow pointer requests GitHub API syntax, test-command syntax, or a reply template. Safety and reply policy live exclusively in this file.

@@ -1,66 +1,45 @@
 ---
 name: review-verify
-description: Verify whether PR review comments are addressed by mapping concerns to code, targeted tests, and browser checks when needed. Use when checking review-fix claims for current-user pending reviews or teammate-visible review threads before replying, resolving, clearing, or submitting.
+description: Verifies PR review concerns against code, targeted tests, and browser behavior. Use before replying, clearing, resolving, or publishing review feedback.
 ---
 
-# Review Verify Skill
+# Review Verify
 
-Verify whether PR review comments have been addressed. Treat CI and deployment as supporting signals, not proof. Map each concern to changed code, tests, and browser behavior when needed.
+Verify review concerns independently. CI and deployment are supporting signals, not proof.
 
-Suggested slash command: `/review-verify <pr-number-or-url>`
+## Concern Record
 
-## When to Use
+Every discovered concern gets one record, including concerns found only in a review summary and comments that are outdated, hidden by a squash, or no longer attached to the current diff:
 
-- The user asks whether review comments have been addressed
-- The user asks to verify fixes before resolving, replying, clearing, or submitting
-- CI has passed but review concerns need independent confirmation
-- A staging browser check is useful for behavior that tests do not fully cover
-- Review comments may be current-user pending, teammate-visible, squashed, outdated, or only visible through review summaries
+- source and stable identifier, plus visibility (`current-user-pending`, `teammate-visible`, or `ambiguous`)
+- exact concern
+- status: `addressed`, `still-open`, `uncertain`, or `not-applicable`
+- code mapping: relevant current paths and lines, or why no current code maps to it
+- test evidence: command and result, existing coverage inspected, or why a targeted test cannot establish the claim
+- browser evidence when user-visible behavior needs it: scenario and result, or why it was unnecessary or blocked
+- gap: remaining risk, missing access, unavailable artifact, or `none`
 
-## Default Behavior
+Use only this status vocabulary:
 
-- Do not assume review comments are addressed; verify them against review text, commits, code, tests, browser behavior, and logs
-- Do not run E2E tests by default; use targeted non-E2E tests and manual browser checks when needed
-- Do not submit, delete, resolve, publish, or publicly reply to review content unless explicitly asked
-- Do not use a pending review as a workaround for publishing replies
-- Prefer the smallest targeted test set that maps directly to the review concerns
-- Treat example URLs as entry points, not exhaustive scope
+- `addressed`: current evidence demonstrates the concern is fixed.
+- `still-open`: current evidence demonstrates the concern remains.
+- `uncertain`: evidence is missing, conflicting, or blocked.
+- `not-applicable`: the concern no longer applies; explain the changed premise rather than treating an outdated or squashed comment as automatically closed.
 
-## Source-Specific Outcomes
+`ready-to-resolve` is not a concern status. Derive it only when status is `addressed` **and** the concern belongs to an identifiable, teammate-visible, unresolved public thread. Explicit user authorization is still required to resolve it.
 
-### Current-user pending review concerns
+## Steps
 
-- If pending inline comments are not visible through REST, use the pending review body and referenced commits as the source of truth
-- Report whether each concern is addressed, still open, uncertain, or no longer applicable
-- If the user asks to clear pending review artifacts after verification, hand off to `review-clear`
-- If the user asks to reply, keep replies pending unless they explicitly ask to submit or publish
+1. **Inventory the review state.** Read PR metadata, review bodies, inline comments, active thread state, commits, current head, CI, and deployment state. Include current-user pending reviews and recover referenced commits when squashing or outdated comments obscures context. Read [REFERENCE.md](REFERENCE.md#read-pr-and-review-state) for commands. **Complete when every discovered inline, summary-only, outdated, and squashed concern has a concern record and source identifier.**
 
-### Teammate-visible review concerns
+2. **Map each concern to the current implementation.** Inspect the referenced code and commit history, then locate the current code path that satisfies or violates the concern. Treat supplied URLs as entry points rather than scope boundaries. **Complete when every record has an exact current code mapping or an explicit explanation of why none exists.**
 
-- Report which threads are ready to resolve, still open, or uncertain
-- If the user explicitly asked to verify and resolve, hand off only fully verified threads to `team-review-resolve`
-- If the user only asked to verify, stop before mutating GitHub state
-- Public replies are allowed only when explicitly requested and must include concrete evidence
+3. **Gather targeted evidence.** Run the smallest non-E2E tests that directly exercise each testable claim; inspect existing coverage where execution is unavailable. Use manual browser verification when tests do not establish user-visible behavior. Read [REFERENCE.md](REFERENCE.md#targeted-tests) for command selection and [REFERENCE.md](REFERENCE.md#browser-verification) for the browser procedure. **Complete when every record contains test evidence, any required browser evidence, and an explicit gap (including `none`).**
 
-## Workflow
+4. **Classify every concern.** Apply exactly one authoritative status from the vocabulary above based on current code and direct evidence. Use CI and deployment only to support that evidence. **Complete when every record has one status with a rationale and no concern is inferred closed merely because it is outdated, squashed, deployed, or green in CI.**
 
-1. Read PR metadata, reviews, review comments, commits, CI status, and current-user pending reviews.
-2. Inspect referenced commits, including commits that may have been squashed away.
-3. Map each concern to changed files, tests, and browser scenarios.
-4. Classify each concern as `addressed`, `still-open`, `uncertain`, or `not-applicable`.
-5. Run targeted non-E2E tests that map directly to the concerns.
-6. Use browser verification when behavior is not fully covered by tests.
-7. Report evidence, ready-to-resolve threads, still-open concerns, and coverage gaps.
-8. Mutate GitHub state only through explicit follow-up skills or explicit user instruction.
+5. **Report verification and route follow-up.** Report all concern records, then list `ready-to-resolve` as a derived subset and state the explicit next action for requested replies, clearing, resolution, or publication. Use [REFERENCE.md](REFERENCE.md#report-shape) for a compact output shape. **Complete when the report accounts for every discovered concern and names every evidence gap and follow-up owner.**
 
-## Reply and Mutation Rules
+## Mutation and Publication Safety
 
-- Reply to review or PR comments only when the user explicitly asks
-- Never submit an existing pending review to make replies visible unless the user explicitly says to submit that pending review
-- Do not use `gh pr review`, the create-review REST endpoint, or any review submission event to satisfy a reply request unless explicitly asked
-- Do not delete pending review artifacts; use `review-clear` only when explicitly asked
-- Do not resolve teammate-visible threads; use `team-review-resolve` only when explicitly asked and only for fully verified threads
-
-## Reference
-
-See [REFERENCE.md](REFERENCE.md) for GitHub API commands, commit inspection commands, test command examples, browser verification steps, and the final response template.
+Verification is read-only, including staging data. Use reversible browser interactions and obtain explicit approval before saving real data. Stop after reporting unless the user explicitly requests a follow-up mutation or publication. Route pending-artifact deletion to `review-clear`, teammate-visible resolution to `team-review-resolve`, and fixes or replies to `review-address`; use the relevant publication skill for submitting a pending review. Keep replies pending unless public visibility was explicitly requested. Never submit an existing pending review as a workaround for making a reply visible, and never resolve a thread whose concern is anything other than `addressed` or which fails public-thread eligibility.

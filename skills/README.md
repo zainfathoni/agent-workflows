@@ -7,7 +7,7 @@ Reusable personal skills that should be available across projects.
 - `fizzy` - manage Fizzy boards, cards, steps, comments, reactions, and pins. Card descriptions must be authored as HTML and card relationships must be linked.
 - `sync-skills` - synchronize global skill installations across machines: update upstream skills, clean up deprecated ones, install local-owned shared skills, and verify the result. The single entry point for setting up or auditing any machine.
 - `log-notes` - log completed agent work into iCloud-synced Obsidian daily notes and relevant topical/project notes.
-- `squash-commits` - analyze branch commits and prepare a rebase guide for squashing related work into descriptive commits.
+- `squash-commits` - prepare a chronological rebase guide and, when explicitly authorized, execute and verify the guided squash.
 - `pr-e2e-evidence` - collect repo-agnostic PR QA evidence: E2E results, browser verification notes, report screenshots, before/after screenshots, and PR description updates.
 - `creating-bta-worktrees` - create and repair BookThatApp sibling worktrees with matching local branches, shared symlinks, and Docker-safe runtime files.
 - `creating-bta-prs` - rename BookThatApp issue worktree branches to existing BTA conventions, commit and push focused changes, and create GitHub PRs from the repo template.

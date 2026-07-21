@@ -20,8 +20,10 @@
   Editing this template does NOT update
   already-shipped lessons or workspace assets — fix those in place.
 
-  Source references MUST carry both a VS Code chip (.vsc, local) and a GitHub
-  permalink chip (.gh, pinned to the reviewed commit SHA) — see .srcline below.
+  The PR/diff/source-reference block is OPTIONAL codebase-derived content.
+  Remove it for lessons not based on a codebase. When real source is cited,
+  replace every placeholder and include both the VS Code chip (.vsc, local)
+  and GitHub permalink chip (.gh, pinned to the reviewed commit SHA).
 -->
 <html lang="en">
 <head>
@@ -84,11 +86,12 @@
 <main id="lesson-main">
 
 <h1>LESSON HEADLINE — the one idea</h1>
-<p class="sub">Lesson N · PR #NNNNN · one-line framing tied to the mission</p>
+<p class="sub">Lesson N · one-line framing tied to the mission<!-- Optional when verified: · PR #NNNNN --></p>
 
 <p>Open with the concrete problem this lesson resolves. Keep it short — one win.</p>
 
 <h2>A section</h2>
+<!-- OPTIONAL CODEBASE-DERIVED BLOCK: remove unless the lesson cites real source. -->
 <figure>
   <figcaption>Diff showing the one important change.</figcaption>
   <p class="listen"><b>Listen first:</b> this snippet removes the old line and adds the new line. When listening, focus on the intent: the deleted line is the behaviour being replaced; the added line is the behaviour to remember.</p>
@@ -101,6 +104,7 @@
   <a class="gh" href="https://github.com/OWNER/REPO/blob/COMMIT_SHA/repo/rel/path.ext#LNN" aria-label="Open pinned GitHub source for file.ext line NN">GitHub↗</a></p>
 
 <blockquote>A reviewer's likely objection, and the crisp rebuttal.</blockquote>
+<!-- END OPTIONAL CODEBASE-DERIVED BLOCK -->
 
 <div class="defense">
 <b>Cold-recall defense (one breath):</b><br>

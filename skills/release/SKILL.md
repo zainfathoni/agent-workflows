@@ -1,32 +1,45 @@
 ---
 name: release
-description: Adds BookThatApp released items to Obsidian daily notes from provided platform data, tickets, or PR links. Use when asked to record releases, shipped work, production deploys, or Vlad's released items in today's daily note.
+description: Records shipped BookThatApp work in Obsidian daily notes. Use with supplied release data or a direct request to update Zain's or Vlad's released items.
 ---
 
 # Release
 
-Update the `## Released ✅` section in `log/daily/YYYY-MM-DD.md` with BTA release entries from the provided platform data, ticket links, PR links, or pasted release text.
+Record shipped BookThatApp work in the correct owner's `## Released ✅` block without disturbing other daily-note content.
 
-## When to use
+## Required context
 
-Use this skill when the user asks to:
+Before editing a daily note, read the [BTA daily-note reference](../reference/bta-daily-note.md) in full. Treat it as authoritative for the shared schema, owner placement, preservation, source precedence, exact links, deduplication, and standup-versus-release routing. Apply the release-specific rules below in addition to that reference.
 
-- add released or shipped items to today's daily note
-- record production deploys as release bullets
-- add Vlad's released items
-- convert platform/ticket/PR data into `## Released ✅` entries
+## Select release items
 
-## Source of truth
+- Include completed shipped work and production deploys.
+- Exclude work only on staging, ready for testing, pending or needing review, represented only by a raised PR, or reporting environment availability. Route those items to standup as required by the shared reference.
+- Route by actual status; words such as “deploy” or “PR” alone do not establish a production release.
 
-1. The user's provided platform data, pasted release notes, ticket links, or PR links.
-2. The existing `log/daily/YYYY-MM-DD.md` structure and nearby release format.
-3. Recent daily notes only if today's release section is missing or unclear.
+## Label release items
 
-Do not query external systems unless the user explicitly provides the platform workflow or asks you to use an available CLI/API. Preserve links exactly as given.
+Choose labels in this order:
 
-## Daily release structure
+1. Preserve the user's or source's explicit label, including `🌟 [Enhancement]`, `🐛 [Hotfix]`, or a combined label such as `🐛🌟 [Bugfix + Feature]`.
+2. Otherwise map the item by meaning:
+   - feature, enhancement, migration, upgrade, or new UI/flow → `🌟 [Feature]`
+   - bug, fix, hotfix, customer issue, or regression → `🐛 [Bugfix]`
+   - chore, cleanup, removal, cache clear, guard, or internal maintenance → `🛠️ [Chore]`
 
-Use this placement inside the BTA section:
+If the label or ownership remains ambiguous after applying the shared source precedence, ask one concise question rather than guessing.
+
+## Format release bullets
+
+- Use one bullet per released item.
+- Ticket and PR: `- 🐛 [Bugfix] [Ticket title](ticket-url) - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
+- Ticket only: `- 🌟 [Feature] [Ticket title](ticket-url)`
+- PR only: `- 🛠️ [Chore] Title - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
+- Prefer a supplied Trello linked title for current platform data: `[Trello card title](url)`.
+- Preserve supplied legacy Shortcut wording, such as `[Shortcut #12345](url)` or `[Story 12345](url)`.
+- Do not add prose such as “to production” unless it is part of the supplied title. Do not invent titles, labels, owners, or links.
+
+The resulting owner blocks follow this shape; placement and empty-heading behavior are defined by the shared reference:
 
 ```md
 ## Released ✅
@@ -42,47 +55,52 @@ Use this placement inside the BTA section:
 ## Escalated Bugs 🐛
 ```
 
-If there are no Zain releases, keep `### Vlad` directly under `## Released ✅`. If there are no Vlad releases, keep the `### Vlad` heading empty.
+## Process
 
-## Workflow
+### 1. Establish the target
 
-1. Determine the target date; default to today.
-2. Read `log/daily/YYYY-MM-DD.md`.
-3. If the daily note does not exist, create the standard BTA daily structure with `## Released ✅`, `### Vlad`, `## Escalated Bugs 🐛`, and `## Private Notes 📝`.
-4. Extract release entries from the provided data:
-   - Production deploys and shipped work belong in `## Released ✅`.
-   - Items only deployed to staging, ready for testing, pending review, or needing review belong in daily standup (`[INFO]` or `[HELP]`), not releases.
-   - Teammate releases for Vlad belong under the `### Vlad` subsection inside `## Released ✅`.
-5. Classify each release item:
-   - `feature`, `enhancement`, migration, upgrade, new UI/flow -> `🌟 [Feature]`
-   - bug, fix, hotfix, customer issue, regression -> `🐛 [Bugfix]`
-   - chore, cleanup, removal, cache clear, guard, internal maintenance -> `🛠️ [Chore]`
-   - preserve explicit labels from the user or source, including `🌟 [Enhancement]`, `🐛 [Hotfix]`, or combined labels like `🐛🌟 [Bugfix + Feature]`.
-6. Preserve Trello, GitHub, Slack, Zendesk, and legacy Shortcut links exactly.
-7. Deduplicate against existing release bullets by matching ticket/PR URLs and item titles.
-8. Insert Zain release bullets between `## Released ✅` and `### Vlad`.
-9. Insert Vlad release bullets under `### Vlad` before the next `##` heading.
-10. Preserve all other sections and private notes.
+Determine the target date, defaulting to today. Read the shared context and the entire target daily note; create an absent note exactly as the shared reference specifies.
 
-## Formatting rules
+**Complete when:** the target path exists with the required schema and its original content is known.
 
-- Use one bullet per released item.
-- Preferred format with ticket and PR:
-  `- 🐛 [Bugfix] [Ticket title](ticket-url) - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
-- Preferred format with only ticket:
-  `- 🌟 [Feature] [Ticket title](ticket-url)`
-- Preferred format with only PR:
-  `- 🛠️ [Chore] Title - [GitHub #123](https://github.com/book-that-app/bookthatapp/pull/123)`
-- Preserve legacy Shortcut wording already present in source material, such as `[Shortcut #12345](url)` or `[Story 12345](url)`.
-- Prefer Trello linked titles for current platform data when available: `[Trello card title](url)`.
-- Do not add prose like "to production" to the title unless it is part of the provided source title.
-- Do not invent item titles, categories, owners, or links. Ask one concise question if classification or ownership is ambiguous.
+### 2. Account for the input
 
-## Verification
+Collect every requested item from supplied platform data, pasted release text, ticket links, PR links, or the direct request.
 
-After editing, read the changed `## Released ✅` block and verify:
+**Complete when:** every supplied item and its available status, owner, label, title, and URLs are represented in a working set.
 
-- Each requested release appears once.
-- Zain and Vlad entries are in the correct subsection.
-- Items not actually released were not moved into the release section.
-- Existing content outside the release block is preserved.
+### 3. Route by actual state
+
+Apply the shared standup-versus-release rule and retain production/shipped items for release. When an item routes to standup, read the daily-standup skill's [classification and formatting rules](../daily-standup/SKILL.md#classify-standup-items) and apply those item-specific rules without restarting its process.
+
+**Complete when:** every item is classified as release or standup with evidence from its actual status, every release has a label, and every standup item has one supported prefix.
+
+### 4. Label and format
+
+Apply the destination-specific label or prefix rules, format every release or standup bullet, and preserve exact links.
+
+**Complete when:** every item has one valid destination bullet without invented metadata.
+
+### 5. Deduplicate and place
+
+Apply the shared deduplication policy, reconcile any matching older-state bullet in the other section, and place each remaining bullet in the correct destination owner block while preserving existing content.
+
+**Complete when:** each supplied item appears at most once in the correct section and owner position, no stale cross-section copy remains, and all non-target content remains intact.
+
+### 6. Verify the result
+
+Read back every release and standup owner block targeted by the supplied items and apply the completion criteria.
+
+**Complete when:** every criterion below passes or the unresolved item is reported as a blocker.
+
+## Completion criteria
+
+The task is complete only when all checks pass:
+
+- Every requested item was considered and either added once, skipped as a duplicate, or routed to standup; no item is silently omitted.
+- Every added release represents completed shipped work or a production deploy and follows one applicable bullet format.
+- Every release has the source's explicit label or the correct Feature, Bugfix, or Chore mapping; combined and nonstandard explicit labels are preserved.
+- Zain and Vlad bullets are in their respective owner positions, including required empty `### Vlad` headings.
+- Every supplied URL and linked title or legacy Shortcut wording is preserved exactly, and no title, status, label, owner, or link was invented.
+- Required headings, existing bullets, other sections, the greeting, and private notes are preserved.
+- No unreleased item appears under `## Released ✅`, and no completed shipped item remains incorrectly routed to standup.

@@ -1,248 +1,109 @@
 ---
 name: self-review
-description: Create or update a current-user PENDING PR review with inline comments using GitHub API. Use when doing self-review, draft review notes, or any PR review that must stay unsubmitted until explicitly published.
+description: Creates or reconciles a current-user PENDING PR review with inline comments. Use when review feedback must remain unpublished.
 ---
 
-# Self Review Skill
+# Self Review
 
-Create a self-review pending GitHub pull request review with inline comments on specific lines of code.
+Independently review a PR, reconcile the findings with the current user's single pending review, and leave the exact intended feedback in that same `PENDING` draft.
 
-Suggested slash command: `/self-review <pr-number-or-url>`
+Suggested command: `/self-review <pr-number-or-url>`
 
-## Default Behavior
+## Model
 
-- Always create or update a **PENDING** review by default.
-- Conduct an independent review first; do not let an existing current-user PENDING review steer the initial findings pass.
-- Reconcile any existing current-user PENDING review only after independent findings are complete.
-- Do **not** submit the review unless the user explicitly instructs you to submit it as `APPROVE`, `COMMENT`, or `REQUEST_CHANGES`.
-- `PENDING` is not a valid submission event. To keep a review pending, omit the `event` field entirely.
-- Never use `POST /repos/{owner}/{repo}/pulls/<pr-number>/comments` when the goal is a pending review comment; that endpoint immediately publishes a `COMMENTED` review.
+Treat the review as two layers:
 
-## Arguments
+1. an independent **finding set**, produced from the diff and evidence without reading the existing draft; and
+2. one current-user **pending review**, reconciled in place only after the finding set is complete.
 
-- `<pr-number>` - The PR number to review (required)
+GitHub permits one pending review per user per PR. Preserve that review and its identity. Omit `event` to keep it pending; `PENDING` is not an event value.
 
-## Steps
+## Invariants
 
-1. **Get PR details and diff**
+- Review every changed risk area: correctness, regressions, authorization and data ownership, security, performance, maintainability, and tests.
+- Do not read existing current-user pending feedback until the independent pass is complete.
+- Never submit or publish without an explicit instruction naming `COMMENT`, `APPROVE`, or `REQUEST_CHANGES`.
+- Never use the REST pull-comment endpoint (`POST /pulls/{pull_number}/comments`) for draft comments; it publishes immediately.
+- Preserve one current-user pending review. Do not silently delete or recreate it.
+- `review-clear` is the sole authority for destructive pending-review deletion. If in-place reconciliation is genuinely impossible, stop, explain why replacement is required, and require an explicit `review-clear` operation before resuming.
+- Keep suggestion widgets pending by attaching GraphQL review threads to the pending review.
 
-   ```bash
-   gh pr view <pr-number>
-   gh pr diff <pr-number>
-   ```
+## Workflow
 
-   If you need to inspect a single changed file or a narrower hunk, prefer local git diffing against the PR base/head refs instead of passing extra path args to `gh pr diff`:
+### 1. Resolve scope and read the change
 
-   ```bash
-   gh pr view <pr-number> --json baseRefName,headRefName
-   git diff --unified=20 origin/<base-ref>...origin/<head-ref> -- path/to/file.js
-   ```
+Resolve the PR, authenticated user, base/head refs, metadata, full diff, changed files, and repository guidance. Inspect relevant call sites, tests, ownership boundaries, and history—not only isolated hunks.
 
-2. **Analyze the changes** - Review the diff for:
+Use [REFERENCE.md](REFERENCE.md#read-the-pr) for commands.
 
-   - Code correctness and potential bugs
-   - Style and convention issues (run ESLint if applicable)
-   - Performance implications
-   - Security considerations
-   - Test coverage
+**Complete when:** every changed file is classified by risk and every changed risk area has been inspected or has an explicit residual-risk note.
 
-3. **Identify specific lines to comment on independently** - For each issue found before reading any existing current-user pending review, note:
+### 2. Build findings independently
 
-   - File path (relative to repo root)
-   - Line number in the new version of the file
-   - The issue/suggestion to raise
+Before fetching the current user's pending review, verify each potential concern against current code. Prefer focused tests; use browser or direct code-path evidence where appropriate. Record:
 
-   When a finding is proven with a focused failing test, inline the important
-   setup and failing assertion in the comment. Prefer a compact snippet the PR
-   author can copy into the suite over process labels or proof jargon. Keep
-   only the lines needed to show the scenario and the failing expectation, and
-   note the received value inline when useful.
+- severity, path, and changed-side line;
+- concrete behavior and impact;
+- supporting evidence and confidence;
+- concise, actionable comment text; and
+- a minimal fix direction or suggestion when useful.
 
-4. **Reconcile with any existing current-user pending review**
+Do not create comments for unsupported suspicions. For a test-proven issue, include only the essential setup and failing assertion, with the received value when useful.
 
-   GitHub allows only **one pending review per user per PR**. After independent findings are complete, fetch the current-user pending review, if any, and compare it with the new findings.
+**Complete when:** the independent finding set accounts for all reviewed risk areas, including explicit testing gaps or residual risks when there are no findings.
 
-   ```bash
-   ME=$(gh api user --jq .login)
-   gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --paginate \
-     | jq --arg me "$ME" '.[] | select(.state=="PENDING" and .user.login==$me) | {id,node_id,user:.user.login,body,commit_id}'
-   ```
+### 3. Inventory the existing draft
 
-   - Keep or merge existing pending comments only when they are independently confirmed, still relevant, and useful.
-   - Dismiss existing pending comments that are invalid, stale, duplicate, superseded, or unsupported by the independent review evidence; note the reason in the final summary instead of carrying them forward.
-   - Rewrite partially right comments so the final draft states only the verified concern and avoids over-claiming.
-   - Do not submit, delete, or replace the pending review until the complete reconciled comment set is ready.
+Only now fetch all reviews and comments and identify reviews where the author is the authenticated user and state is `PENDING`. Follow pagination.
 
-5. **Create or replace the pending review with inline comments** using GitHub API:
+- If none exists, create one pending review.
+- If exactly one exists, preserve its review ID and reconcile it in place.
+- If ownership or cardinality is ambiguous, stop without mutation.
 
-   This is the default action. Unless the user explicitly asks to submit the review, omit `event` and leave the review pending. If replacing an existing pending review, use the complete reconciled comment set.
+Use [REFERENCE.md](REFERENCE.md#find-the-current-users-draft) for identity and inventory commands.
 
-   For normal pending inline comments, create the pending review with a `comments` array:
+**Complete when:** the current-user pending-review cardinality, numeric ID, node ID, body, and complete comment set are known.
 
-   ```bash
-   # For a PENDING (draft) review - omit "event" field
-   cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --method POST --input -
-   {
-     "body": "Summary of the review",
-     "comments": [
-       {
-         "path": "path/to/file.js",
-         "line": 42,
-         "body": "Comment about line 42"
-       },
-       {
-         "path": "path/to/another/file.js",
-         "line": 10,
-         "body": "Comment about line 10"
-       }
-     ]
-   }
-   EOF
+### 4. Reconcile every finding and draft comment
 
-    # Only add "event": "COMMENT", "APPROVE", or "REQUEST_CHANGES" when the user explicitly asks to submit the review
-   ```
+Compare the independent findings and existing draft one by one:
 
-   If comments contain GitHub ````suggestion` blocks and must render as Suggested change widgets, create the pending review shell first, then add line-anchored threads with GraphQL `addPullRequestReviewThread` using the pending review's `node_id`. The REST review `comments` array can store comments as legacy `position` comments, which may not render as applyable suggestions. Do **not** fall back to the REST pull request comments endpoint; it publishes immediately.
+- retain independently confirmed, current, non-duplicate comments;
+- rewrite partially correct or over-claimed comments;
+- remove stale, invalid, duplicate, or superseded draft comments;
+- add independently verified findings missing from the draft; and
+- set the summary body to the intended final summary.
 
-   ```bash
-   # 1. Create a pending review shell; omit "event".
-   review_json=$(cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --method POST --input -
-   {
-     "body": "Summary of the pending review"
-   }
-   EOF
-   )
-   review_node=$(echo "$review_json" | jq -r .node_id)
+Record a disposition for every independent finding and every pre-existing draft comment. Reconciliation changes the existing draft through supported in-place comment/body mutations; it does not stack a second draft or replace the review.
 
-   # 2. Add a pending, line-anchored suggested-change thread to that review.
-   body=$(cat <<'EOF'
-   **Functional regression:** concise explanation.
+Read [REFERENCE.md](REFERENCE.md#reconcile-in-place) before mutating. It contains mutation syntax, line-anchor parameters, suggestion mechanics, and the stop condition for unsupported artifacts.
 
-   ```suggestion
-   replacement code for the commented line
-   ```
-   EOF
-   )
+**Complete when:** every finding and existing comment has exactly one disposition, and the intended body/comment set is fully specified before mutation.
 
-   gh api graphql \
-     -f query='mutation($review: ID!, $path: String!, $line: Int!, $body: String!) { addPullRequestReviewThread(input: { pullRequestReviewId: $review, path: $path, line: $line, side: RIGHT, body: $body }) { thread { comments(first: 1) { nodes { databaseId pullRequestReview { databaseId state } } } } } }' \
-     -f review="$review_node" \
-     -f path="path/to/file.js" \
-     -F line=42 \
-     -f body="$body"
-   ```
+### 5. Create or update the pending draft
 
-6. **Manage pending reviews carefully**
+For no existing draft, create a review with the intended body and comments while omitting `event`. For an existing draft, update its body and comments in place using its IDs. Add line-anchored comments—especially ````suggestion` blocks—as GraphQL review threads attached to its review node ID.
 
-   - If no draft review exists yet, create one by omitting `event`.
-   - If you need to revise the draft before submission, recreate it with the full reconciled comment set.
-   - Do not assume you can append more inline comments later to the same draft review.
+Do not pass an event, call a submission endpoint, use the REST pull-comment endpoint, or delete the review. If GitHub cannot mutate a required legacy artifact in place, stop and route explicit deletion to `review-clear`; resume only after that separate operation succeeds.
 
-   Recommended workflow when reconciliation changes the pending review:
+Use [REFERENCE.md](REFERENCE.md#create-a-new-pending-review) and [REFERENCE.md](REFERENCE.md#reconcile-in-place).
 
-   ```bash
-   # First get the REST numeric review id for the current user's pending review
-   ME=$(gh api user --jq .login)
-   gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --paginate \
-     | jq --arg me "$ME" '.[] | select(.state=="PENDING" and .user.login==$me) | {id,node_id,user:.user.login}'
+**Complete when:** exactly one current-user review contains the intended body and comments, remains `PENDING`, and no destructive or public fallback occurred.
 
-   # Delete the existing pending review by REST numeric id
-   gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews/<numeric-review-id> --method DELETE
+### 6. Verify exact final state
 
-   # Recreate the pending review with the complete reconciled comments array
-   cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews --method POST --input -
-   {
-     "body": "Updated review summary",
-     "comments": [
-       { "path": "path/to/file.js", "line": 42, "body": "First comment" },
-       { "path": "path/to/file.js", "line": 57, "body": "Newly added comment" }
-     ]
-   }
-   EOF
-   ```
+Re-fetch the review, body, comments, and thread state. Compare IDs, ownership, state, anchors, bodies, and count against the intended set. Check that suggestion comments remain in the pending review and render from ````suggestion` blocks.
 
-7. **Submit the pending review only on explicit user instruction**
+**Complete only when:**
 
-   Once the inline comments look correct, keep the draft review pending unless the user explicitly tells you to submit it.
+- every changed risk area was reviewed;
+- every independent finding and pre-existing draft comment was reconciled;
+- exactly one resulting review belongs to the current authenticated user;
+- that review remains `PENDING`; and
+- it contains exactly the intended body and comments—no missing, duplicate, stale, or accidentally public feedback.
 
-   When the user does explicitly instruct submission, submit the existing draft review:
+Report findings first, then reconciliations, draft review ID/state, verification evidence, and residual risks. If exact state cannot be proved, report the gap and make no destructive fallback.
 
-   ```bash
-   cat <<'EOF' | gh api repos/{owner}/{repo}/pulls/<pr-number>/reviews/<review-id>/events --method POST --input -
-   {
-     "event": "REQUEST_CHANGES",
-     "body": "Requesting changes because ..."
-   }
-   EOF
-   ```
+## Explicit Submission Boundary
 
-## API Parameters
-
-| Parameter         | Description                                                        |
-| ----------------- | ------------------------------------------------------------------ |
-| `event`           | Review action: `COMMENT`, `APPROVE`, `REQUEST_CHANGES`, or **omit for PENDING** |
-| `body`            | Overall review summary (shown at top of review)                    |
-| `comments`        | Array of inline comment objects                                    |
-| `comments[].path` | File path relative to repo root                                    |
-| `comments[].line` | Line number in the **new** version of the file (right side of diff)|
-| `comments[].body` | The comment text (supports GitHub Markdown)                        |
-
-## Comment Formatting Tips
-
-- Use `**Bold**` for emphasis on issue type
-- Use code blocks with language hints for suggested fixes
-- For findings proven by a focused failing test, include a minimal failing test snippet instead of process labels or proof jargon
-- Keep comments actionable and specific
-- Reference documentation or style guides when relevant
-
-## Example Comment Body
-
-```markdown
-**Functional regression:** initial URL hydration resets shared URLs with `page=3` back to page 1.
-
-Minimal failing case:
-
-```tsx
-Object.defineProperty(window, 'location', {
-  configurable: true,
-  value: {
-    ...originalLocation,
-    search: '?q%5Bproduct_id_eq%5D=7&page=3',
-    pathname: '/admin/reservations',
-  },
-});
-
-render(
-  <ReservationsProvider syncURL>
-    <ContextViewCapture />
-    <ReservationsTable settings={settings} />
-  </ReservationsProvider>
-);
-
-expect(capturedContextView.page).toBe(3); // received 1
-```
-
-Please hydrate the selected view without applying the interactive pagination reset.
-```
-
-## Review Events
-
-| Event | Description |
-| ----- | ----------- |
-| *(omit field)* | Creates a **PENDING** (draft) review - user can edit before submitting |
-| `COMMENT` | Submit feedback without explicit approval |
-| `APPROVE` | Submit as approval |
-| `REQUEST_CHANGES` | Submit requesting changes before merging |
-
-**Note:** `PENDING` is not a valid event value - to create a draft review, omit the `event` field entirely.
-
-## Notes
-
-- Line numbers must reference lines that exist in the diff
-- For multi-line comments, use the `line` parameter for the ending line
-- The `{owner}/{repo}` placeholders are auto-resolved by `gh` CLI
-- GitHub rejects a second pending review on the same PR from the same user
-- If you need to add or revise draft inline comments, replace the pending review instead of trying to stack another pending review
-- `POST /repos/{owner}/{repo}/pulls/<pr-number>/comments` is for publishing pull request review comments, not drafting pending review comments; using it creates visible `COMMENTED` reviews.
-- For pending comments that contain ````suggestion` blocks, prefer GraphQL `addPullRequestReviewThread` attached to the pending review `node_id` so GitHub renders them as Suggested change widgets while keeping them pending.
-- Unless the user explicitly says to submit the review, leave it pending after posting inline comments
+This skill's default endpoint is a verified pending draft. Submission is a separate action and requires an explicit event instruction. See [REFERENCE.md](REFERENCE.md#submit-only-when-explicitly-instructed) only when the user has clearly requested `COMMENT`, `APPROVE`, or `REQUEST_CHANGES`; otherwise stop with the review pending.
