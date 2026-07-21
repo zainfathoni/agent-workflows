@@ -17,7 +17,7 @@ Reusable personal skills that should be available across projects.
 
 When comparing `teach` with upstream, treat upstream as input, not authority: adopt upstream changes only when they improve the teaching model without weakening the local delta. Preserve the local delta unless a grilling decision explicitly retires it: source-derived workspace directories, reusable workspace assets as the default architecture, static/offline hosting portability, per-workspace hosting docs, codebase source chips with both VS Code deep links and pinned GitHub permalinks, optional Tailscale serving helper, Tycho inquiry feedback loops, and the committed local templates/scripts under `skills/teach/`.
 
-Use globally installed upstream skills alongside these shared skills. Upstream-tracked skills are installed from Matt Pocock's skills and may accept upstream breaking changes, including renames and removal of deprecated skills.
+Use globally installed upstream skills alongside these shared skills. Upstream-tracked skills are installed from their source repositories and may accept upstream breaking changes, including renames and removal of deprecated skills.
 
 - `ask-matt` - route to the appropriate upstream user-invoked skill.
 - `domain-modeling` - maintain durable domain language and ADRs while decisions are made.
@@ -38,6 +38,7 @@ Use globally installed upstream skills alongside these shared skills. Upstream-t
 - `code-review` - two-axis review of the diff since a fixed point: Standards (coding standards plus a Fowler refactoring-smell baseline) and Spec (faithfulness to the originating spec or ticket), run as parallel sub-agents.
 - `tdd` - test-driven development reference material: red-green loop with refactoring moved to the code-review phase. Now reference-only so AFK agents can work autonomously.
 - `improve-codebase-architecture`, `setup-matt-pocock-skills`, and `triage` - upstream engineering workflow skills.
+- `improve` - audit a codebase, produce a prioritized improvement plan, and execute or reconcile that plan. Installed from [`shadcn/improve`](https://github.com/shadcn/improve).
 
 Deprecated upstream skills such as `caveman`, `zoom-out`, `to-prd`, `to-issues`, and `to-plan` should remain uninstalled unless they become local-owned skills with explicit documented behavior.
 
@@ -64,7 +65,7 @@ For manual control or troubleshooting, the underlying scripts are:
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
 
-`update-upstream.sh` uses an explicit allowlist and intentionally excludes local-owned `teach`. It also removes deprecated skills via `npx skills remove --global` before installing. Override the target agents with `UPSTREAM_SKILLS_AGENTS` if needed; the default is `*`.
+`update-upstream.sh` uses explicit allowlists for Matt Pocock's skills and `shadcn/improve`, and intentionally excludes local-owned `teach`. It also removes deprecated skills via `npx skills remove --global` before installing. By default it copies skills into the verifiable `amp`, `claude-code`, and `codex` global targets. Override that set with a whitespace-separated subset, such as `UPSTREAM_SKILLS_AGENTS="amp claude-code"`; other agent IDs are rejected because this repository cannot verify their global destinations.
 
 `install.sh` symlinks all local-owned shared skills. The default target is `~/.agents/skills`. Override it with `AGENT_SKILLS_DIR`:
 
