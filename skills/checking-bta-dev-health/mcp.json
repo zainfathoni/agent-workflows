@@ -1,0 +1,27 @@
+{
+  "bta-dev-health-browser": {
+    "command": "npx",
+    "args": [
+      "-y",
+      "chrome-devtools-mcp@1.6.0",
+      "--isolated=true",
+      "--headless=false",
+      "--viewport=1280x720",
+      "--redact-network-headers=true",
+      "--no-usage-statistics",
+      "--no-performance-crux",
+      "--chrome-arg=--bta-dev-health-probe"
+    ],
+    "includeTools": [
+      "list_pages",
+      "new_page",
+      "navigate_page",
+      "take_snapshot",
+      "click",
+      "wait_for",
+      "close_page",
+      "list_console_messages",
+      "list_network_requests"
+    ]
+  }
+}

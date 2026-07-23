@@ -11,6 +11,7 @@ Reusable personal skills that should be available across projects.
 - `pr-e2e-evidence` - collect repo-agnostic PR QA evidence: E2E results, browser verification notes, report screenshots, before/after screenshots, and PR description updates.
 - `creating-bta-worktrees` - create and repair BookThatApp sibling worktrees with matching local branches, shared symlinks, and Docker-safe runtime files.
 - `creating-bta-prs` - rename BookThatApp issue worktree branches to existing BTA conventions, commit and push focused changes, and create GitHub PRs from the repo template.
+- `checking-bta-dev-health` - inventory unfinished BookThatApp work and check bounded agent, credential, runtime, staging, disk, worktree, and temporary-browser readiness before AFK development.
 - `teach` - stateful, multi-session teaching workspace (mission, lessons, reference docs, learning records, reusable workspace assets, workspace-owned hosting docs). Vendored from Matt Pocock's AI Hero ([learn-anything-with-my-teach-skill](https://www.aihero.dev/learn-anything-with-my-teach-skill)) and tracked here so local modifications are version-controlled. Local changes: codebase lessons link source references via `vscode://file/<path>:<line>` deep links and pinned GitHub permalinks; lesson hosting is documented per workspace.
 
 `teach` is local-owned. Do not overwrite it with `npx skills add mattpocock/skills`; compare upstream changes in a separate grilling session and selectively port only the accepted parts.
