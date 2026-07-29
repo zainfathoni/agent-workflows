@@ -12,7 +12,7 @@ Options:
   --notes-root PATH  BookThatApp claude-notes project root. Default: resolved from canonical .claude symlink
   -h, --help         Show this help.
 
-Refreshes shared Claude/notes symlinks and installs Docker-safe local runtime
+Refreshes shared Amp/Claude/notes symlinks and installs Docker-safe local runtime
 files as hard links or copies. Real per-worktree runtime files are skipped.
 USAGE
 }
@@ -102,6 +102,13 @@ fi
 
 notes_root="$(cd "$notes_root" && pwd)"
 
+if [ ! -L "$canonical/.amp" ] || [ ! -d "$canonical/.amp" ]; then
+  printf 'Could not resolve Amp config from canonical .amp symlink: %s\n' "$canonical/.amp" >&2
+  exit 1
+fi
+
+amp_source="$(cd "$canonical/.amp" && pwd -P)"
+
 apply_symlink() {
   local wt="$1"
   local path="$2"
@@ -154,7 +161,7 @@ for wt in "${worktrees[@]}"; do
   printf '## %s\n' "$wt"
 
   apply_symlink "$wt" .agents "$notes_root/.agents"
-  apply_symlink "$wt" .amp "$notes_root/.amp"
+  apply_symlink "$wt" .amp "$amp_source"
   apply_symlink "$wt" .claude "$notes_root/.claude"
   apply_symlink "$wt" .envrc "$notes_root/bookthatapp.envrc"
   apply_symlink "$wt" .mcp.json "$notes_root/bookthatapp.mcp.json"
