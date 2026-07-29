@@ -21,6 +21,7 @@ mkdir -p \
   "$worktree" \
   "$preserved_worktree/.amp"
 git -C "$canonical" init --quiet
+expected_amp_source="$(cd "$amp_project/.amp" && pwd -P)"
 
 ln -s "$notes_root/.claude" "$canonical/.claude"
 ln -s "$amp_project/.amp" "$canonical/.amp"
@@ -32,7 +33,7 @@ printf 'preserve me\n' > "$preserved_worktree/.amp/existing.txt"
 
 test ! -e "$notes_root/.amp"
 test "$(readlink "$worktree/.agents")" = "$notes_root/.agents"
-test "$(readlink "$worktree/.amp")" = "$amp_project/.amp"
+test "$(readlink "$worktree/.amp")" = "$expected_amp_source"
 test "$(readlink "$worktree/.claude")" = "$notes_root/.claude"
 test ! -L "$preserved_worktree/.amp"
 test "$(cat "$preserved_worktree/.amp/existing.txt")" = "preserve me"
