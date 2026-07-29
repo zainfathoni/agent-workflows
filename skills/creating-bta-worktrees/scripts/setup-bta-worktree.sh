@@ -154,6 +154,7 @@ for wt in "${worktrees[@]}"; do
   printf '## %s\n' "$wt"
 
   apply_symlink "$wt" .agents "$notes_root/.agents"
+  apply_symlink "$wt" .amp "$notes_root/.amp"
   apply_symlink "$wt" .claude "$notes_root/.claude"
   apply_symlink "$wt" .envrc "$notes_root/bookthatapp.envrc"
   apply_symlink "$wt" .mcp.json "$notes_root/bookthatapp.mcp.json"
