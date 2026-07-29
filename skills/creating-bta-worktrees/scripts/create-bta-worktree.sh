@@ -12,7 +12,7 @@ Arguments:
 
 Options:
   --base BRANCH      Base branch for new bta/* branches. Default: bta/main
-  --canonical PATH   Canonical BookThatApp worktree for runtime files. Default: current repo root
+  --canonical PATH   Canonical BookThatApp worktree for Amp config and runtime files. Default: current repo root
   --notes-root PATH  BookThatApp claude-notes project root. Default: resolved by setup script
   --no-lock          Do not lock the new git worktree.
   -h, --help         Show this help.
