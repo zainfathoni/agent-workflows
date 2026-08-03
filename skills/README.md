@@ -40,6 +40,7 @@ Use globally installed upstream skills alongside these shared skills. Upstream-t
 - `tdd` - test-driven development reference material: red-green loop with refactoring moved to the code-review phase. Now reference-only so AFK agents can work autonomously.
 - `improve-codebase-architecture`, `setup-matt-pocock-skills`, and `triage` - upstream engineering workflow skills.
 - `improve` - audit a codebase, produce a prioritized improvement plan, and execute or reconcile that plan. Installed from [`shadcn/improve`](https://github.com/shadcn/improve).
+- `tycho` - manage Tycho-monitored projects and managed agents: create/list/run/stop/send/archive/clone agents, control schedules. Installed from [`firewalker06/tycho`](https://github.com/firewalker06/tycho).
 
 Deprecated upstream skills such as `caveman`, `zoom-out`, `to-prd`, `to-issues`, and `to-plan` should remain uninstalled unless they become local-owned skills with explicit documented behavior.
 
@@ -66,7 +67,7 @@ For manual control or troubleshooting, the underlying scripts are:
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
 
-`update-upstream.sh` uses explicit allowlists for Matt Pocock's skills and `shadcn/improve`, and intentionally excludes local-owned `teach`. It also removes deprecated skills via `npx skills remove --global` before installing. By default it copies skills into the verifiable `amp`, `claude-code`, and `codex` global targets. Override that set with a whitespace-separated subset, such as `UPSTREAM_SKILLS_AGENTS="amp claude-code"`; other agent IDs are rejected because this repository cannot verify their global destinations.
+`update-upstream.sh` uses explicit allowlists for Matt Pocock's skills, `shadcn/improve`, and `firewalker06/tycho`, and intentionally excludes local-owned `teach`. It also removes deprecated skills via `npx skills remove --global` before installing. By default it copies skills into the verifiable `amp`, `claude-code`, and `codex` global targets. Override that set with a whitespace-separated subset, such as `UPSTREAM_SKILLS_AGENTS="amp claude-code"`; other agent IDs are rejected because this repository cannot verify their global destinations.
 
 `install.sh` symlinks all local-owned shared skills. The default target is `~/.agents/skills`. Override it with `AGENT_SKILLS_DIR`:
 

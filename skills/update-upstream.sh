@@ -5,6 +5,7 @@ set -euo pipefail
 
 UPSTREAM_PACKAGE=${UPSTREAM_SKILLS_PACKAGE:-mattpocock/skills}
 IMPROVE_PACKAGE=${IMPROVE_SKILLS_PACKAGE:-shadcn/improve}
+TYCHO_PACKAGE=${TYCHO_SKILLS_PACKAGE:-firewalker06/tycho}
 UPSTREAM_AGENTS=${UPSTREAM_SKILLS_AGENTS:-amp claude-code codex}
 
 # Keep this list aligned with skills/README.md. Do not include local-owned skills
@@ -34,6 +35,10 @@ UPSTREAM_SKILLS=(
 
 IMPROVE_SKILLS=(
   improve
+)
+
+TYCHO_SKILLS=(
+  tycho
 )
 
 # Upstream skills that were renamed or merged in v1.1 and no longer exist.
@@ -122,6 +127,31 @@ verify_improve_installation() {
   ' "$GLOBAL_SKILL_LOCK"
 }
 
+verify_tycho_installation() {
+  local agent
+  local root
+
+  for agent in "${upstream_agents[@]}"; do
+    root=$(agent_skill_root "$agent")
+    verify_skill_file "$root/tycho/SKILL.md"
+  done
+
+  if [ -e "$CANONICAL_UPSTREAM_ROOT/tycho" ] || [ -L "$CANONICAL_UPSTREAM_ROOT/tycho" ]; then
+    verify_skill_file "$CANONICAL_UPSTREAM_ROOT/tycho/SKILL.md"
+  fi
+
+  node -e '
+    const fs = require("fs");
+    const lockPath = process.argv[1];
+    const lock = JSON.parse(fs.readFileSync(lockPath, "utf8"));
+    const tycho = lock.skills && lock.skills.tycho;
+    if (!tycho || tycho.source !== "firewalker06/tycho" || tycho.sourceType !== "github") {
+      console.error(`Unexpected tycho provenance in ${lockPath}`);
+      process.exit(1);
+    }
+  ' "$GLOBAL_SKILL_LOCK"
+}
+
 for agent in "${upstream_agents[@]}"; do
   agent_skill_root "$agent" >/dev/null
 done
@@ -172,3 +202,17 @@ npx --yes skills@latest add "$IMPROVE_PACKAGE" \
   "${improve_skill_args[@]}"
 
 verify_improve_installation
+
+tycho_skill_args=()
+for skill in "${TYCHO_SKILLS[@]}"; do
+  tycho_skill_args+=(--skill "$skill")
+done
+
+npx --yes skills@latest add "$TYCHO_PACKAGE" \
+  --global \
+  "${agent_args[@]}" \
+  --copy \
+  --yes \
+  "${tycho_skill_args[@]}"
+
+verify_tycho_installation
