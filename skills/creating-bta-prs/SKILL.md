@@ -114,12 +114,12 @@ Recheck status and proceed only with the explicit push/PR authorization establis
 ```bash
 git -C "$repo" status --short --branch
 git -C "$repo" push -u origin "$new_branch"
-gh pr create \
+pr_url=$(gh pr create \
   --repo "$repo_nwo" \
   --base "$default_branch" \
   --head "$new_branch" \
   --title "Fix Safari back link handling" \
-  --body-file "$pr_body"
+  --body-file "$pr_body")
 ```
 
 Capture the command result, and remove the temporary body file after the attempt; the trap provides cleanup on failure as well.
@@ -131,7 +131,39 @@ trap - EXIT
 
 **Complete when:** for an authorized PR, the branch has an upstream push result, `gh pr create` has returned a URL or a recorded error, and the temporary body file no longer exists; otherwise no remote mutation occurred.
 
-### 6. Verify and report evidence
+### 6. Apply standard BTA PR ownership and review metadata
+
+Treat the standard metadata as part of authorized BTA PR creation, not as an
+optional follow-up. Resolve the authenticated GitHub login, then assign the PR
+to that user, add the `bug` label, and request review from `unrooty`:
+
+```bash
+github_login=$(gh api user --jq '.login')
+gh pr edit "$pr_url" \
+  --repo "$repo_nwo" \
+  --add-assignee "$github_login" \
+  --add-label bug \
+  --add-reviewer unrooty
+```
+
+Verify GitHub's resulting state directly:
+
+```bash
+gh pr view "$pr_url" \
+  --repo "$repo_nwo" \
+  --json assignees,labels,reviewRequests,url \
+  --jq '{url, assignees: [.assignees[].login], labels: [.labels[].name], reviewRequests: [.reviewRequests[].login]}'
+```
+
+Do not silently omit a failed assignment, missing label, or failed review
+request. Report the exact partial state and error. Follow an explicit user
+instruction when they name a different assignee, label, or reviewer.
+
+**Complete when:** the authenticated user is an assignee, `bug` is present, and
+`unrooty` appears in requested reviewers, or the exact metadata blocker and
+partial state are reported.
+
+### 7. Verify and report evidence
 
 Inspect the final local state and, when a PR was created, query GitHub rather than relying only on command output:
 
@@ -144,4 +176,7 @@ gh pr view --repo "$repo_nwo" --json url,baseRefName,headRefName,title
 
 Report the old and new branch names; commit hash and summary (or why no commit was created); push result and upstream; PR URL, base, and head; every verification command and result; and any blocker, missing template, skipped check, or unrelated dirty file left untouched.
 
-**Complete when:** the final report contains checkable branch and commit evidence, PR evidence when created, honest test results, and every remaining concern.
+For a created PR, include the verified assignee, labels, and requested reviewers
+from step 6.
+
+**Complete when:** the final report contains checkable branch and commit evidence, PR and metadata evidence when created, honest test results, and every remaining concern.
