@@ -131,19 +131,22 @@ trap - EXIT
 
 **Complete when:** for an authorized PR, the branch has an upstream push result, `gh pr create` has returned a URL or a recorded error, and the temporary body file no longer exists; otherwise no remote mutation occurred.
 
-### 6. Apply standard BTA PR ownership and review metadata
+### 6. Apply standard BTA PR ownership and contextual metadata
 
-Treat the standard metadata as part of authorized BTA PR creation, not as an
-optional follow-up. Resolve the authenticated GitHub login, then assign the PR
-to that user, add the `bug` label, and request review from `unrooty`:
+Treat assignment and issue-type labeling as part of authorized BTA PR creation,
+not as optional follow-up. Resolve the authenticated GitHub login and assign the
+PR to that user. Select the issue-type label from the PR's actual context:
+`bug`, `feature`, or `chore`. Prefer an explicit user or issue-tracker
+classification, then consistent branch/title evidence. Do not default to `bug`;
+ask when the classification is absent, conflicting, or ambiguous.
 
 ```bash
 github_login=$(gh api user --jq '.login')
+: "${pr_label:?set pr_label to the established bug, feature, or chore classification}"
 gh pr edit "$pr_url" \
   --repo "$repo_nwo" \
   --add-assignee "$github_login" \
-  --add-label bug \
-  --add-reviewer unrooty
+  --add-label "$pr_label"
 ```
 
 Verify GitHub's resulting state directly:
@@ -151,19 +154,43 @@ Verify GitHub's resulting state directly:
 ```bash
 gh pr view "$pr_url" \
   --repo "$repo_nwo" \
-  --json assignees,labels,reviewRequests,url \
-  --jq '{url, assignees: [.assignees[].login], labels: [.labels[].name], reviewRequests: [.reviewRequests[].login]}'
+  --json assignees,labels,url \
+  --jq '{url, assignees: [.assignees[].login], labels: [.labels[].name]}'
 ```
 
-Do not silently omit a failed assignment, missing label, or failed review
-request. Report the exact partial state and error. Follow an explicit user
-instruction when they name a different assignee, label, or reviewer.
+Do not silently omit a failed assignment or missing label. Report the exact
+partial state and error. Follow an explicit user instruction when they name a
+different assignee or label.
 
-**Complete when:** the authenticated user is an assignee, `bug` is present, and
-`unrooty` appears in requested reviewers, or the exact metadata blocker and
+**Complete when:** the authenticated user is an assignee and the established
+`bug`, `feature`, or `chore` label is present, or the exact metadata blocker and
 partial state are reported.
 
-### 7. Verify and report evidence
+### 7. Request external review only after explicit approval
+
+Do not request review from `unrooty` during PR creation by default. The owner may
+need to complete a self-review first. Wait for an explicit instruction to
+request the review for this PR; an instruction for an earlier PR does not carry
+forward.
+
+After that explicit go-ahead:
+
+```bash
+gh pr edit "$pr_url" --repo "$repo_nwo" --add-reviewer unrooty
+gh pr view "$pr_url" \
+  --repo "$repo_nwo" \
+  --json reviewRequests,url \
+  --jq '{url, reviewRequests: [.reviewRequests[].login]}'
+```
+
+Report a failed request or unexpected reviewer state instead of claiming the PR
+is awaiting review.
+
+**Complete when:** review was intentionally left unrequested for self-review, or
+an explicitly authorized request is verified with `unrooty` in requested
+reviewers.
+
+### 8. Verify and report evidence
 
 Inspect the final local state and, when a PR was created, query GitHub rather than relying only on command output:
 
@@ -176,7 +203,8 @@ gh pr view --repo "$repo_nwo" --json url,baseRefName,headRefName,title
 
 Report the old and new branch names; commit hash and summary (or why no commit was created); push result and upstream; PR URL, base, and head; every verification command and result; and any blocker, missing template, skipped check, or unrelated dirty file left untouched.
 
-For a created PR, include the verified assignee, labels, and requested reviewers
-from step 6.
+For a created PR, include the verified assignee and contextual label from step
+6, plus whether external review was intentionally deferred or explicitly
+requested under step 7.
 
 **Complete when:** the final report contains checkable branch and commit evidence, PR and metadata evidence when created, honest test results, and every remaining concern.
