@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+printf 'Orb resume: checking repository prerequisites\n'
+
+for command_name in git gh jq python3 curl; do
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    printf 'Missing required command: %s (rerun .agents/setup)\n' "$command_name" >&2
+    exit 1
+  fi
+done
+
+dcg_bin="$HOME/.local/bin/dcg"
+if [ ! -x "$dcg_bin" ] || ! "$dcg_bin" --version 2>/dev/null | grep -Fq '0.5.7'; then
+  printf 'Missing required dcg v0.5.7 installation (rerun .agents/setup)\n' >&2
+  exit 1
+fi
+
+printf 'Orb resume complete\n'

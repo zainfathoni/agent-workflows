@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+started_at=$SECONDS
+printf 'Orb setup: checking repository prerequisites\n'
+
+missing_packages=()
+command -v git >/dev/null 2>&1 || missing_packages+=(git)
+command -v gh >/dev/null 2>&1 || missing_packages+=(gh)
+command -v jq >/dev/null 2>&1 || missing_packages+=(jq)
+command -v python3 >/dev/null 2>&1 || missing_packages+=(python3)
+command -v curl >/dev/null 2>&1 || missing_packages+=(curl)
+
+if [ "${#missing_packages[@]}" -gt 0 ]; then
+  printf 'Orb setup: installing system packages: %s\n' "${missing_packages[*]}"
+  sudo apt-get update
+  sudo apt-get install -y "${missing_packages[@]}"
+else
+  printf 'Orb setup: system packages already available\n'
+fi
+
+dcg_version=v0.5.7
+dcg_bin="$HOME/.local/bin/dcg"
+if [ ! -x "$dcg_bin" ] || ! "$dcg_bin" --version 2>/dev/null | grep -Fq '0.5.7'; then
+  printf 'Orb setup: installing dcg %s\n' "$dcg_version"
+  mkdir -p "$(dirname "$dcg_bin")"
+  installer="$(mktemp)"
+  trap 'rm -f "$installer"' EXIT
+  curl -fsSL \
+    "https://raw.githubusercontent.com/Dicklesworthstone/destructive_command_guard/$dcg_version/install.sh" \
+    -o "$installer"
+  bash "$installer" \
+    --version "$dcg_version" \
+    --dest "$(dirname "$dcg_bin")" \
+    --no-configure \
+    --verify
+  rm -f "$installer"
+  trap - EXIT
+else
+  printf 'Orb setup: dcg %s already installed\n' "$dcg_version"
+fi
+
+printf 'Orb setup complete in %ss\n' "$((SECONDS - started_at))"
