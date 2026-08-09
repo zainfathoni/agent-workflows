@@ -3,10 +3,15 @@
 
 set -euo pipefail
 
-UPSTREAM_PACKAGE=${UPSTREAM_SKILLS_PACKAGE:-mattpocock/skills}
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UPSTREAM_PACKAGE=${UPSTREAM_SKILLS_PACKAGE:-https://github.com/mattpocock/skills.git#v1.2.3}
 IMPROVE_PACKAGE=${IMPROVE_SKILLS_PACKAGE:-shadcn/improve}
 TYCHO_PACKAGE=${TYCHO_SKILLS_PACKAGE:-firewalker06/tycho}
 UPSTREAM_AGENTS=${UPSTREAM_SKILLS_AGENTS:-amp claude-code codex}
+UPSTREAM_REF=""
+case "$UPSTREAM_PACKAGE" in
+  *#*) UPSTREAM_REF=${UPSTREAM_PACKAGE##*#} ;;
+esac
 
 # Keep this list aligned with skills/README.md. Do not include local-owned skills
 # such as teach; they are installed from this repository via skills/install.sh.
@@ -17,7 +22,7 @@ UPSTREAM_SKILLS=(
   grill-with-docs
   codebase-design
   diagnosing-bugs
-  writing-great-skills
+  writing-for-agents
   resolving-merge-conflicts
   handoff
   prototype
@@ -31,6 +36,15 @@ UPSTREAM_SKILLS=(
   research
   code-review
   triage
+  grill-me
+  to-questionnaire
+  wait-what
+)
+
+# wizard is promoted upstream but deferred here. Its model-invoked template
+# accepts unconstrained ENV_FILE paths and ambient GitHub repository writes.
+BLOCKED_UPSTREAM_SKILLS=(
+  wizard
 )
 
 IMPROVE_SKILLS=(
@@ -41,7 +55,7 @@ TYCHO_SKILLS=(
   tycho
 )
 
-# Upstream skills that were renamed or merged in v1.1 and no longer exist.
+# Upstream skills that were renamed, merged, or retired and should no longer exist.
 # Older deprecated skills that should never be installed are also included.
 # The skills installer does not remove old skills, so use `skills remove` for
 # agent-specific cleanup, then fall back to filesystem removal for any stragglers.
@@ -51,6 +65,13 @@ DEPRECATED_UPSTREAM_SKILLS=(
   to-plan
   caveman
   zoom-out
+  writing-great-skills
+  ubiquitous-language
+  design-an-interface
+  qa
+  request-refactor-plan
+  edit-article
+  obsidian-vault
 )
 
 LOCAL_ROOT=${AGENT_SKILLS_DIR:-$HOME/.agents/skills}
@@ -69,14 +90,12 @@ agent_args=(--agent "${upstream_agents[@]}")
 
 agent_skill_root() {
   case "$1" in
-    amp)
-      printf '%s/agents/skills\n' "${XDG_CONFIG_HOME:-$HOME/.config}"
+    amp|codex)
+      # skills@latest uses the Agent Skills shared root for Amp and Codex.
+      printf '%s\n' "$CANONICAL_UPSTREAM_ROOT"
       ;;
     claude-code)
       printf '%s/skills\n' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
-      ;;
-    codex)
-      printf '%s/skills\n' "${CODEX_HOME:-$HOME/.codex}"
       ;;
     *)
       printf 'Unsupported agent in UPSTREAM_SKILLS_AGENTS: %s (supported: amp claude-code codex)\n' "$1" >&2
@@ -92,6 +111,56 @@ verify_skill_file() {
     printf 'Missing installed skill file: %s\n' "$path" >&2
     return 1
   fi
+}
+
+verify_matt_installation() {
+  local agent
+  local existing_root
+  local root
+  local skill
+  local seen
+  local expected_ref="$UPSTREAM_REF"
+  local roots=()
+
+  for agent in "${upstream_agents[@]}"; do
+    root=$(agent_skill_root "$agent")
+    seen=false
+    for existing_root in ${roots[@]+"${roots[@]}"}; do
+      if [ "$existing_root" = "$root" ]; then
+        seen=true
+        break
+      fi
+    done
+    if [ "$seen" = false ]; then
+      roots+=("$root")
+    fi
+  done
+
+  for root in "${roots[@]}"; do
+    for skill in "${UPSTREAM_SKILLS[@]}"; do
+      "$SCRIPT_DIR/validate-installed-skill.mjs" "$root/$skill"
+    done
+
+    verify_skill_file "$root/writing-for-agents/SKILL-MECHANICS.md"
+    verify_skill_file "$root/ask-matt/PHASE-BOUNDARIES.md"
+    verify_skill_file "$root/diagnosing-bugs/scripts/hitl-loop.template.sh"
+  done
+
+  node - "$GLOBAL_SKILL_LOCK" "$expected_ref" "${UPSTREAM_SKILLS[@]}" <<'NODE'
+const fs = require("fs")
+const [lockPath, expectedRef, ...skills] = process.argv.slice(2)
+const lock = JSON.parse(fs.readFileSync(lockPath, "utf8"))
+
+for (const skill of skills) {
+  const entry = lock.skills && lock.skills[skill]
+  if (!entry || entry.source !== "mattpocock/skills" || entry.sourceType !== "github") {
+    throw new Error(`Unexpected ${skill} provenance in ${lockPath}`)
+  }
+  if (expectedRef && entry.ref !== expectedRef) {
+    throw new Error(`Expected ${skill} ref ${expectedRef}, got ${entry.ref || "<none>"}`)
+  }
+}
+NODE
 }
 
 verify_improve_installation() {
@@ -159,12 +228,20 @@ done
 remove_deprecated() {
   local skill="$1"
   local target
+  local roots=(
+    "$LOCAL_ROOT"
+    "$CANONICAL_UPSTREAM_ROOT"
+    "$HOME/.claude/skills"
+    "${XDG_CONFIG_HOME:-$HOME/.config}/agents/skills"
+    "${CODEX_HOME:-$HOME/.codex}/skills"
+  )
 
   # Use the Skills CLI to remove from all registered agent directories.
   npx --yes skills@latest remove "$skill" --global --yes 2>/dev/null || true
 
   # Filesystem fallback for any agent directories the CLI missed.
-  for target in "$LOCAL_ROOT/$skill" "$HOME/.claude/skills/$skill"; do
+  for target in "${roots[@]}"; do
+    target="$target/$skill"
     if [ -e "$target" ] || [ -L "$target" ]; then
       rm -r "$target"
       printf 'Removed deprecated skill: %s\n' "$target"
@@ -173,6 +250,10 @@ remove_deprecated() {
 }
 
 for skill in "${DEPRECATED_UPSTREAM_SKILLS[@]}"; do
+  remove_deprecated "$skill"
+done
+
+for skill in "${BLOCKED_UPSTREAM_SKILLS[@]}"; do
   remove_deprecated "$skill"
 done
 
@@ -188,6 +269,8 @@ npx --yes skills@latest add "$UPSTREAM_PACKAGE" \
   --full-depth \
   --yes \
   "${skill_args[@]}"
+
+verify_matt_installation
 
 improve_skill_args=()
 for skill in "${IMPROVE_SKILLS[@]}"; do

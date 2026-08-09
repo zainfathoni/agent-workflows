@@ -17,16 +17,16 @@ Planning and triage are maintainer-initiated steps. `/prototype` is model-invoke
 
 - `/to-spec` creates spec issues.
 - `/to-tickets` breaks a spec into tracer-bullet tickets with blocking edges.
-- `/wayfinder` plans large work as a shared map of investigation tickets on the issue tracker, resolved one at a time.
-- `/prototype` answers unclear product, UI, state, or integration questions with throwaway spikes before work is committed to issues. Model-invoked so `/wayfinder` can use it directly.
-- `/handoff` compacts a long planning, debugging, or prototyping session so a fresh agent can continue with context.
+- `/wayfinder` plans large work as a shared map of decision tickets on the issue tracker, resolved one at a time.
+- `/prototype` answers one unclear logic or UI question with throwaway code, then retains that primary source outside main. Model-invoked so `/wayfinder` can use it directly.
+- `/handoff` carries context to another harness, directory, colleague, or side task when continuing in place is not possible.
 - `/triage` evaluates readiness and applies triage labels.
 
 Ralph starts after triage. It only consumes issues already marked `ready-for-agent`. It also treats GitHub's issue dependency graph as the canonical blocker source: issues with open `blockedBy` dependencies are not eligible for execution.
 
 If upstream skills create issues with `ready-for-agent-triage`, treat that as a planning/triage queue label. It does not make an issue eligible for Ralph until the repository's triage labels map the issue to `ready-for-agent`.
 
-Reference: [Skills Changelog v1.1: /wayfinder, /to-spec, /to-tickets, /grilling improvements, and much more](https://www.aihero.dev/skills/skills-changelog-v1-1-wayfinder-to-spec-to-tickets-grilling-improvements).
+Reference: [Skills Changelog v1.2: /wait-what, /writing-for-agents, Claude Code Plugin, and more](https://www.aihero.dev/skills/skills-changelog-v12-wait-what-writing-for-agents-claude-code-plugin-and-more).
 
 ## Onboard A Repository
 
@@ -138,7 +138,7 @@ For manual control or troubleshooting, the underlying scripts are:
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
 
-`skills/update-upstream.sh` installs explicit allowlists of upstream-tracked skills, including `shadcn/improve`, and intentionally excludes local-owned `teach`, so pulling this repo does not depend on a human remembering which upstream skills are safe to update.
+`skills/update-upstream.sh` installs a release-pinned allowlist of upstream-tracked skills, including `shadcn/improve`, and intentionally excludes local-owned `teach`, so pulling this repo does not depend on a human remembering which upstream skills are safe to update. Upstream `wizard` remains blocked pending local file/repository mutation hardening.
 
 By default this symlinks shared skills into `~/.agents/skills`. Set `AGENT_SKILLS_DIR` to install somewhere else.
 
