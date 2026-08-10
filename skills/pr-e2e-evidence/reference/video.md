@@ -14,9 +14,11 @@ Read this reference only when motion, timing, or a multi-stage interaction is ne
 - Use Playwright WebM/VP8 when it is already available. Note H.264 as the greatest-compatibility option when reviewers' browsers require it.
 - Target less than 3 MB; 10 MB is the hard ceiling. Prefer video over GIF for this branch.
 
-## Disposable Playwright recording
+## Capture ownership
 
-Record successful evidence in a disposable context rather than depending on a repository's failure-only recording setting:
+Use Playwright `recordVideo` as the live browser recorder. Use FFmpeg only after Playwright finalizes the WebM—for trimming, caption overlays, redaction, or compression. This separation keeps browser timing and viewport capture deterministic and avoids desktop/window-recorder failures.
+
+Record successful evidence in a disposable context rather than depending on a repository's failure-only recording setting. Retain `page.video()` immediately, close the page to finalize the recording, then save the finalized video:
 
 ```js
 const context = await browser.newContext({
@@ -32,9 +34,27 @@ const video = page.video();
 // Exercise one bounded scenario and add caption/cursor overlays if needed.
 
 await page.close();
-const videoPath = await video.path();
+await video.saveAs('/tmp/pr-e2e-video/scenario.webm');
 await context.close();
 ```
+
+When the scenario needs an existing authenticated Chrome session, launch a task-private profile clone instead of reusing a live profile directly:
+
+```js
+const context = await chromium.launchPersistentContext(privateProfilePath, {
+  channel: 'chrome',
+  headless: true,
+  viewport: { width: 1280, height: 720 },
+  recordVideo: {
+    dir: '/tmp/pr-e2e-video',
+    size: { width: 1280, height: 720 },
+  },
+});
+```
+
+Keep the private profile outside evidence artifacts, logs, and the repository; remove it after capture. A development environment that authenticates fresh browser contexts does not need a profile clone.
+
+If FFmpeg lacks `drawtext`, render caption cards as PNGs with Pillow and apply them with the `overlay` filter. Preserve the raw Playwright recording until the annotated output passes the playback gate.
 
 ## Playback gate
 
@@ -47,4 +67,13 @@ Inspect the final file at normal playback size and verify:
 - playback works in the reviewers' browser;
 - the complete interaction stays inside the named scenario.
 
-Record duration, dimensions, codec, and file size in the local draft and adjacent published PR text. Upload the video once and verify the PR renders a playable control rather than only an opaque download link.
+Inspect codec, dimensions, frame rate, duration, and size before publication:
+
+```bash
+ffprobe -v error \
+  -show_entries format=filename,duration,size:stream=codec_name,width,height,r_frame_rate \
+  -of compact=p=0:nk=1 \
+  /tmp/pr-e2e-video/scenario.webm
+```
+
+Record those properties in the local draft and adjacent published PR text. Review representative frames or a contact sheet in addition to metadata. Upload the video once and verify the PR renders a playable control rather than only an opaque download link.
