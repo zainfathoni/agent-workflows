@@ -12,7 +12,7 @@ Produce a compact, reproducible browser record that lets a reviewer judge the PR
 - Populate the evidence section with browser verification; add implementation verification when the user explicitly requests it.
 - Name the exact environment, route, browser surface, role, fixture or data, interaction mode, and result needed to reproduce each claim.
 - Keep claims bounded to the scenario exercised. Record unrelated console or network noise separately and state whether it blocked the scenario.
-- Provide an adjacent text verdict for every visual artifact. Use labels and captions in addition to color so the evidence remains accessible without playing a video.
+- Provide an adjacent text verdict for every visual artifact. Prefer PR prose over baked video captions when the native interaction and result are already visible; when annotation is necessary, use labels in addition to color without covering live UI.
 - Treat GitHub attachment URLs as shareable. Never capture secrets or sensitive merchant or customer data.
 
 ## Screenshot or Video Gate
