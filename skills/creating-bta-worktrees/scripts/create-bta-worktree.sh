@@ -11,7 +11,9 @@ Arguments:
   <bta-name>         Sibling worktree name, such as bta-debug or bta-teach.
 
 Options:
-  --base BRANCH      Base branch for new bta/* branches. Default: bta/main
+  --branch BRANCH    New ephemeral branch, matching <type>/trello-<id>-<slug>.
+                     Required unless reusing an existing legacy bta/* branch.
+  --base BRANCH      Local base branch for a new branch. Default: bta/main
   --canonical PATH   Canonical BookThatApp worktree for Amp config and runtime files. Default: current repo root
   --notes-root PATH  BookThatApp claude-notes project root. Default: resolved by setup script
   --no-lock          Do not lock the new git worktree.
@@ -23,6 +25,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 setup_script="$script_dir/setup-bta-worktree.sh"
 
 base_branch="${BTA_WORKTREE_BASE:-bta/main}"
+branch="${BTA_WORKTREE_BRANCH:-}"
 canonical="${BTA_CANONICAL_WORKTREE:-}"
 notes_root="${BTA_NOTES_ROOT:-}"
 lock=1
@@ -30,6 +33,14 @@ name=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --branch)
+      if [ "$#" -lt 2 ]; then
+        printf 'Missing value for --branch\n' >&2
+        exit 2
+      fi
+      branch="$2"
+      shift 2
+      ;;
     --base)
       if [ "$#" -lt 2 ]; then
         printf 'Missing value for --base\n' >&2
@@ -94,7 +105,38 @@ esac
 repo_root="$(git rev-parse --show-toplevel)"
 parent_dir="$(dirname "$repo_root")"
 worktree_path="$parent_dir/$name"
-branch="bta/${name#bta-}"
+
+if [ -z "$branch" ]; then
+  branch="bta/${name#bta-}"
+  if ! git show-ref --verify --quiet "refs/heads/$branch"; then
+    printf 'New ephemeral worktrees require --branch <bugfix|feature|chore>/trello-<id>-<slug>; refusing to create legacy branch %s\n' "$branch" >&2
+    exit 2
+  fi
+else
+  case "$branch" in
+    bugfix/trello-[0-9]*-[a-z0-9]*|feature/trello-[0-9]*-[a-z0-9]*|chore/trello-[0-9]*-[a-z0-9]*) ;;
+    *)
+      printf 'Ephemeral branch must match <bugfix|feature|chore>/trello-<id>-<lowercase-slug>: %s\n' "$branch" >&2
+      exit 2
+      ;;
+  esac
+
+  branch_tail="${branch#*/trello-}"
+  trello_id="${branch_tail%%-*}"
+  branch_slug="${branch_tail#*-}"
+  case "$trello_id" in
+    ''|*[!0-9]*)
+      printf 'Trello ID must be numeric: %s\n' "$branch" >&2
+      exit 2
+      ;;
+  esac
+  case "$branch_slug" in
+    ''|*[!a-z0-9-]*|*-|-*|*--*)
+      printf 'Branch slug must use lowercase letters, numbers, and single hyphens: %s\n' "$branch" >&2
+      exit 2
+      ;;
+  esac
+fi
 
 if [ -z "$canonical" ]; then
   canonical="$repo_root"

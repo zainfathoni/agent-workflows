@@ -16,16 +16,23 @@ test -x "$create_script" && test -x "$setup_script"
 From a BookThatApp worktree, invoke the resolved skill script with the approved sibling name:
 
 ```bash
-"$create_script" bta-debug
+"$create_script" \
+  --branch bugfix/trello-947-search-save-recovery \
+  bta-947-search-save-recovery
 ```
 
 Examples of conditional options:
 
 ```bash
-"$create_script" --base bta/main bta-debug
-"$create_script" --no-lock bta-debug
-"$create_script" --canonical ../bookthatapp bta-debug
+"$create_script" --base feature/trello-1001-stale-cache --branch bugfix/trello-1001-toast-recovery bta-1001-toast-recovery
+"$create_script" --no-lock --branch feature/trello-1234-capacity-calendar bta-1234-capacity-calendar
+"$create_script" --canonical ../bookthatapp --branch chore/trello-1234-test-harness bta-1234-test-harness
 ```
+
+New ephemeral branches require an explicit `--branch` matching
+`<bugfix|feature|chore>/trello-<numeric-id>-<lowercase-slug>`. A command without
+`--branch` can only reuse an existing legacy `bta/<slug>` branch for an explicitly
+identified long-running worktree; it cannot create a new legacy branch.
 
 ## Repair invocations
 
@@ -66,7 +73,7 @@ Verify registration and every target's branch/status explicitly:
 
 ```bash
 git worktree list --porcelain
-git -C ../bta-debug status --short --branch
+git -C ../bta-947-search-save-recovery status --short --branch
 git -C ../bta-teach status --short --branch
 ```
 
