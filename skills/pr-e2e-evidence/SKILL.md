@@ -1,6 +1,6 @@
 ---
 name: pr-e2e-evidence
-description: Collects and publishes browser-facing PR E2E evidence. Use for static pre-merge screenshots, baseline/candidate UI comparison, bounded interaction video, or post-deployment verification.
+description: Collects and publishes browser-facing PR E2E evidence to GitHub or Google Drive. Use for static pre-merge screenshots, baseline/candidate UI comparison, bounded interaction video, or post-deployment verification.
 ---
 
 # PR E2E Evidence
@@ -66,11 +66,16 @@ Treat this directory as working material for the final PR evidence rather than t
 
 ### 6. Publish the pre-merge evidence
 
-Make the open PR body the final pre-merge evidence location. A repository convention, explicit user request, or uneditable body may select an intentional comment instead. Transfer the structured evidence and embed renderable media. When GitHub-hosted attachment upload is needed, read and follow [`reference/github-publishing.md`](reference/github-publishing.md). The comment editor may generate attachment URLs, but never submit an upload-only comment; clear it after extracting the URLs.
+Make the open PR body the default pre-merge evidence location. A repository convention or explicit user request may select an intentional comment, Google Drive archive, or Google Docs review instead. Transfer the structured evidence and embed renderable media. For Google Docs response synchronization, hand the audited package inventory and artifact mapping to the `audit-doc-sync` skill.
+
+- For GitHub-hosted attachments, read and follow [`reference/github-publishing.md`](reference/github-publishing.md).
+- For a Drive archive, read and follow [`reference/google-drive-docs-publishing.md`](reference/google-drive-docs-publishing.md).
+
+The GitHub comment editor may generate attachment URLs, but never submit an upload-only comment; clear it after extracting the URLs.
 
 Use `gh pr edit --body-file` or the browser edit UI. Group evidence by scenario or surface, preserve the existing template, and explain what each artifact demonstrates.
 
-**Complete when:** the chosen PR location renders the structured evidence and all media, existing template content remains intact, and no unintended comment was created.
+**Complete when:** the chosen review location renders the structured evidence and mapped media, its access boundary is verified independently, existing content remains intact, and no unintended edit or comment was created.
 
 ### 7. Follow the deployment
 
