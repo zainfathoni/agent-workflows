@@ -9,7 +9,6 @@ trap 'rm -rf "$test_root"' EXIT
 
 canonical="$test_root/bookthatapp"
 notes_root="$test_root/notes"
-amp_project="$test_root/amp-project"
 worktree="$test_root/bta-test"
 preserved_worktree="$test_root/bta-preserved"
 
@@ -17,15 +16,13 @@ mkdir -p \
   "$canonical" \
   "$notes_root/.agents" \
   "$notes_root/.claude" \
-  "$amp_project/.amp" \
   "$worktree" \
   "$preserved_worktree/.amp"
 git -C "$canonical" init --quiet
-expected_amp_source="$(cd "$amp_project/.amp" && pwd -P)"
 
 ln -s "$notes_root/.claude" "$canonical/.claude"
-ln -s "$amp_project/.amp" "$canonical/.amp"
 ln -s "$test_root/old-agents" "$worktree/.agents"
+ln -s "$test_root/legacy-amp" "$worktree/.amp"
 ln -s "$test_root/old-claude" "$worktree/.claude"
 printf 'preserve me\n' > "$preserved_worktree/.amp/existing.txt"
 
@@ -33,9 +30,10 @@ printf 'preserve me\n' > "$preserved_worktree/.amp/existing.txt"
 
 test ! -e "$notes_root/.amp"
 test "$(readlink "$worktree/.agents")" = "$notes_root/.agents"
-test "$(readlink "$worktree/.amp")" = "$expected_amp_source"
+test ! -e "$worktree/.amp"
+test ! -L "$worktree/.amp"
 test "$(readlink "$worktree/.claude")" = "$notes_root/.claude"
 test ! -L "$preserved_worktree/.amp"
 test "$(cat "$preserved_worktree/.amp/existing.txt")" = "preserve me"
 
-printf 'setup-bta-worktree symlink test passed\n'
+printf 'setup-bta-worktree User Plugins boundary test passed\n'

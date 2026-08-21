@@ -14,7 +14,7 @@ Options:
   --branch BRANCH    New ephemeral branch, matching <type>/trello-<id>-<slug>.
                      Required unless reusing an existing legacy bta/* branch.
   --base BRANCH      Local base branch for a new branch. Default: bta/main
-  --canonical PATH   Canonical BookThatApp worktree for Amp config and runtime files. Default: current repo root
+  --canonical PATH   Canonical BookThatApp worktree for runtime files. Default: current repo root
   --notes-root PATH  BookThatApp claude-notes project root. Default: resolved by setup script
   --no-lock          Do not lock the new git worktree.
   -h, --help         Show this help.

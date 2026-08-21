@@ -79,6 +79,8 @@ git -C ../bta-teach status --short --branch
 
 For each target supplied to setup, require its emitted `OK runtime file` result. The script emits that result only when the runtime file is non-empty and is not a symlink.
 
+Also require `OK User Plugins boundary: <worktree>/.amp absent` for worktrees without real project-local Amp configuration. Setup removes legacy `.amp` symlinks so the global User Plugins repository owns plugin discovery, while preserving a real per-worktree `.amp` path with `SKIP real path`.
+
 Runtime files use hard links or copies because Docker containers cannot resolve absolute macOS symlink targets outside the mounted worktree. These signatures identify the affected runtime file:
 
 - missing Traefik certificate or key: Traefik cannot find PEM data;
