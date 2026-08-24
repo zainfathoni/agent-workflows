@@ -166,7 +166,45 @@ different assignee or label.
 `bug`, `feature`, or `chore` label is present, or the exact metadata blocker and
 partial state are reported.
 
-### 7. Request external review only after explicit approval
+### 7. Trigger missing stacked-PR CI only when authorized
+
+After creating a stacked PR, inspect its exact head, base, draft state, reviews,
+and check rollup. Do not infer that CI cannot run merely because the workflow's
+`pull_request.branches` filter names the default branch while the PR currently
+targets another stack branch. In this repository, a `ready_for_review` event can
+start the Tests workflow for that stacked PR.
+
+```bash
+gh pr view "$pr_url" \
+  --repo "$repo_nwo" \
+  --json state,isDraft,headRefName,headRefOid,baseRefName,reviews,reviewRequests,statusCheckRollup
+```
+
+If checks are absent and the user explicitly authorized triggering CI, first
+require an OPEN, non-draft PR at the expected head and base. Inspect existing
+reviews and review requests because changing draft state can disrupt active
+review. Stop and ask before toggling a PR that already has approval or active
+review state. For a new unreviewed PR, convert it to draft and immediately back
+to ready:
+
+```bash
+gh pr ready "$pr_url" --repo "$repo_nwo" --undo
+gh pr ready "$pr_url" --repo "$repo_nwo"
+```
+
+Treat the two commands as one bounded operation: if the draft conversion
+succeeds but restoring ready state fails, report and repair that partial state
+before doing anything else. Then verify that the PR is ready again, its head and
+base are unchanged, and an exact-head Tests run or check rollup appeared. Do not
+rerun workflows or repeat the toggle blindly when no run appears; diagnose the
+observed event/workflow state instead.
+
+**Complete when:** CI triggering was not requested or was unnecessary because
+checks already existed; or the explicitly authorized draft/ready toggle restored
+the PR to ready at the unchanged head/base and the resulting exact-head CI run
+was verified; or the exact partial-state/blocker was reported.
+
+### 8. Request external review only after explicit approval
 
 Do not request review from `unrooty` during PR creation by default. The owner may
 need to complete a self-review first. Wait for an explicit instruction to
@@ -190,7 +228,7 @@ is awaiting review.
 an explicitly authorized request is verified with `unrooty` in requested
 reviewers.
 
-### 8. Verify and report evidence
+### 9. Verify and report evidence
 
 Inspect the final local state and, when a PR was created, query GitHub rather than relying only on command output:
 
@@ -205,6 +243,7 @@ Report the old and new branch names; commit hash and summary (or why no commit w
 
 For a created PR, include the verified assignee and contextual label from step
 6, plus whether external review was intentionally deferred or explicitly
-requested under step 7.
+requested under step 8. When step 7 applied, include the restored ready state,
+unchanged head/base, and exact-head CI run URL.
 
 **Complete when:** the final report contains checkable branch and commit evidence, PR and metadata evidence when created, honest test results, and every remaining concern.
