@@ -17,20 +17,22 @@ From a BookThatApp worktree, invoke the resolved skill script with the approved 
 
 ```bash
 "$create_script" \
-  --branch bugfix/trello-947-search-save-recovery \
+  --branch bugfix/trello-947/search-save-recovery \
   bta-947-search-save-recovery
 ```
 
 Examples of conditional options:
 
 ```bash
-"$create_script" --base feature/trello-1001-stale-cache --branch bugfix/trello-1001-toast-recovery bta-1001-toast-recovery
-"$create_script" --no-lock --branch feature/trello-1234-capacity-calendar bta-1234-capacity-calendar
-"$create_script" --canonical ../bookthatapp --branch chore/trello-1234-test-harness bta-1234-test-harness
+"$create_script" --base feature/trello-1001/stale-cache --branch bugfix/trello-1001/toast-recovery bta-1001-toast-recovery
+"$create_script" --no-lock --branch feature/trello-1234/capacity-calendar bta-1234-capacity-calendar
+"$create_script" --canonical ../bookthatapp --branch chore/trello-1234/test-harness bta-1234-test-harness
 ```
 
 New ephemeral branches require an explicit `--branch` matching
-`<bugfix|feature|chore>/trello-<numeric-id>-<lowercase-slug>`. A command without
+`<bugfix|feature|chore>/trello-<numeric-id>/<lowercase-slug>`. The Trello segment
+groups multiple branches belonging to one card. Existing branches using the older
+hyphen-only form remain accepted for compatibility. A command without
 `--branch` can only reuse an existing legacy `bta/<slug>` branch for an explicitly
 identified long-running worktree; it cannot create a new legacy branch.
 

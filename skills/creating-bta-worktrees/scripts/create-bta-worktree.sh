@@ -11,7 +11,7 @@ Arguments:
   <bta-name>         Sibling worktree name, such as bta-debug or bta-teach.
 
 Options:
-  --branch BRANCH    New ephemeral branch, matching <type>/trello-<id>-<slug>.
+  --branch BRANCH    New ephemeral branch, matching <type>/trello-<id>/<slug>.
                      Required unless reusing an existing legacy bta/* branch.
   --base BRANCH      Local base branch for a new branch. Default: bta/main
   --canonical PATH   Canonical BookThatApp worktree for runtime files. Default: current repo root
@@ -109,33 +109,19 @@ worktree_path="$parent_dir/$name"
 if [ -z "$branch" ]; then
   branch="bta/${name#bta-}"
   if ! git show-ref --verify --quiet "refs/heads/$branch"; then
-    printf 'New ephemeral worktrees require --branch <bugfix|feature|chore>/trello-<id>-<slug>; refusing to create legacy branch %s\n' "$branch" >&2
+    printf 'New ephemeral worktrees require --branch <bugfix|feature|chore>/trello-<id>/<slug>; refusing to create legacy branch %s\n' "$branch" >&2
     exit 2
   fi
 else
-  case "$branch" in
-    bugfix/trello-[0-9]*-[a-z0-9]*|feature/trello-[0-9]*-[a-z0-9]*|chore/trello-[0-9]*-[a-z0-9]*) ;;
-    *)
-      printf 'Ephemeral branch must match <bugfix|feature|chore>/trello-<id>-<lowercase-slug>: %s\n' "$branch" >&2
-      exit 2
-      ;;
-  esac
-
-  branch_tail="${branch#*/trello-}"
-  trello_id="${branch_tail%%-*}"
-  branch_slug="${branch_tail#*-}"
-  case "$trello_id" in
-    ''|*[!0-9]*)
-      printf 'Trello ID must be numeric: %s\n' "$branch" >&2
-      exit 2
-      ;;
-  esac
-  case "$branch_slug" in
-    ''|*[!a-z0-9-]*|*-|-*|*--*)
-      printf 'Branch slug must use lowercase letters, numbers, and single hyphens: %s\n' "$branch" >&2
-      exit 2
-      ;;
-  esac
+  if [[ "$branch" =~ ^(bugfix|feature|chore)/trello-([0-9]+)/([a-z0-9]+(-[a-z0-9]+)*)$ ]]; then
+    :
+  elif [[ "$branch" =~ ^(bugfix|feature|chore)/trello-([0-9]+)-([a-z0-9]+(-[a-z0-9]+)*)$ ]]; then
+    # Existing ephemeral branches used the pre-hierarchy naming convention.
+    :
+  else
+    printf 'Ephemeral branch must match <bugfix|feature|chore>/trello-<id>/<lowercase-slug>: %s\n' "$branch" >&2
+    exit 2
+  fi
 fi
 
 if [ -z "$canonical" ]; then

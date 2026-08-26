@@ -33,15 +33,28 @@ grep -q 'New ephemeral worktrees require --branch' "$test_root/refusal.log"
   cd "$canonical"
   "$create_script" \
     --base bta/main \
-    --branch bugfix/trello-947-search-save-recovery \
+    --branch bugfix/trello-947/search-save-recovery \
     --canonical "$canonical" \
     --notes-root "$notes_root" \
     bta-947-search-save-recovery
 )
 
 test "$(git -C "$test_root/bta-947-search-save-recovery" branch --show-current)" = \
-  'bugfix/trello-947-search-save-recovery'
+  'bugfix/trello-947/search-save-recovery'
 test ! -e "$test_root/bta-947-search-save-recovery/.amp"
 test ! -L "$test_root/bta-947-search-save-recovery/.amp"
+
+(
+  cd "$canonical"
+  "$create_script" \
+    --base bta/main \
+    --branch bugfix/trello-947/retry-feedback \
+    --canonical "$canonical" \
+    --notes-root "$notes_root" \
+    bta-947-retry-feedback
+)
+
+test "$(git -C "$test_root/bta-947-retry-feedback" branch --show-current)" = \
+  'bugfix/trello-947/retry-feedback'
 
 printf 'create-bta-worktree branch naming test passed\n'
