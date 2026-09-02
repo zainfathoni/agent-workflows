@@ -2,48 +2,54 @@
 
 Read this reference when local screenshots or videos must become GitHub-hosted PR or issue attachments.
 
-GitHub-hosted image markup has this form:
+## Preconditions
+
+- Use GitHub CLI v2.99.0 or newer against GitHub.com.
+- Authenticate `gh` with an OAuth token or classic personal access token that has push access to the repository.
+- Keep images and GIFs at or below 10 MB. Keep videos at or below 10 MB on Free plans or 100 MB on paid plans.
+- Attach PNG, JPEG, GIF, WebP, SVG, MP4, MOV, or WebM files. GitHub Enterprise Server does not support this flow.
+
+**Complete when:** the CLI version, host, authentication, repository access, file types, and file sizes satisfy every precondition.
+
+## Publish with `--attach`
+
+Build the complete body before publication. Reference each image by its local path and meaningful alt text:
 
 ```md
-![Scenario label](https://github.com/user-attachments/assets/<uuid>)
+![Checkout retains the selected date after refresh](docs/tests/web-123/checkout-after.png)
 ```
 
-GitHub documents no attachment-retention SLA, so the structured PR text and decisive stills remain the durable record.
+Reference each video with image syntax in its own paragraph so GitHub renders a player:
 
-## Browser upload flow
-
-When Chrome DevTools is available and GitHub is authenticated:
-
-1. Open the PR or issue conversation and find the comment editor's attachment target.
-2. Upload one local media file or a small batch.
-3. Wait until each `Uploading...` placeholder becomes completed Markdown with a stable `user-attachments` URL.
-4. Confirm the attachment URL count increased and map each URL to its alt text or filename.
-5. Extract the generated markup, clear the editor, and verify the submit button is disabled or the editor is empty.
-6. Add the attachment markup to the structured `## E2E evidence` section with `gh pr edit --body-file` or the browser edit UI.
-7. Verify every image renders, every video has a playable control, the new URLs are present, and the PR comment count did not increase.
-
-The comment editor may stage uploads for the publication target selected by the main process.
-
-Practical Chrome DevTools sequence:
-
-```text
-upload_file(uid=<attachment drop target>, filePath=<local media file>)
-wait until the editor text contains `user-attachments` and no longer contains `Uploading`
-repeat for each media file or small batch
-read the editor text and map alt text / filename to attachment URL
-clear the editor value and dispatch input/change events
-update the PR body with the final grouped Markdown evidence
-verify the comment count did not increase
+```md
+![](docs/tests/web-123/checkout-save.webm)
 ```
 
-After each upload, verify the attachment URL count increased before starting the next batch.
+Pass every referenced file through a repeatable `--attach` flag in the same command that writes the body. GitHub CLI uploads each file and rewrites the matching local path in place while preserving image alt text:
+
+```bash
+gh pr edit "$PR_NUMBER" \
+  --body-file docs/tests/web-123/pr-body.md \
+  --attach docs/tests/web-123/checkout-after.png \
+  --attach docs/tests/web-123/checkout-save.webm
+```
+
+Use the same pattern with `gh pr create`, `gh pr comment`, `gh issue create`, `gh issue edit`, or `gh issue comment` when that command owns the publication target. An attached file not referenced in the body is appended in flag order. Add `#alt text` to an image attachment path only when appending it, for example `--attach 'checkout.png#Checkout confirmation'`; videos do not support attachment-flag alt text. Do not attach the same file twice in one command.
+
+After publication, fetch the resulting body and confirm that every local reference became a distinct GitHub-hosted URL in the intended scenario. Inspect the rendered target at normal review size: every image must render, every video must expose a playable control, and all pre-existing body content must remain intact.
+
+**Complete when:** one publication command has mapped every local artifact to the intended body location, and the fetched and rendered result passes every check.
 
 ## Fallbacks
 
-When browser upload is unavailable, choose the first acceptable option:
+When the native flow is unavailable, choose the first acceptable option:
 
-1. Ask the user to upload the files and return the rendered Markdown or URLs.
-2. Use `gh image` or `gh-image` when already installed, or when the user accepts installation, and it can access a valid GitHub browser session token.
+1. Update GitHub CLI to v2.99.0 or newer when the current environment permits package changes.
+2. Ask the user to upload the files and return the rendered Markdown or URLs when GitHub Enterprise Server, permissions, or environment ownership blocks native upload.
 3. Use an external public host only with the user's explicit acceptance of its visibility and durability tradeoff.
 
 Repository raw URLs, committed `docs/tests/` media, and notes-repository links count as final evidence only when they render reliably in the PR body or intentional comment. Mark an earlier broken or redundant comment as superseded and link to the rendered evidence. Delete a self-authored public comment only when the user explicitly requests that deletion.
+
+GitHub documents no attachment-retention SLA, so keep structured PR text and decisive stills as the durable record.
+
+**Complete when:** the selected fallback renders in the intended publication target and its access and durability tradeoffs are recorded.

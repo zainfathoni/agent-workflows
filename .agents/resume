@@ -11,6 +11,14 @@ for command_name in git gh jq python3 curl; do
   fi
 done
 
+required_gh_version=2.99.0
+installed_gh_version=$(gh version | awk 'NR == 1 { print $3 }')
+if ! dpkg --compare-versions "$installed_gh_version" ge "$required_gh_version"; then
+  printf 'GitHub CLI >= %s required; found %s (rerun .agents/setup)\n' \
+    "$required_gh_version" "$installed_gh_version" >&2
+  exit 1
+fi
+
 dcg_bin="$HOME/.local/bin/dcg"
 if [ ! -x "$dcg_bin" ] || ! "$dcg_bin" --version 2>/dev/null | grep -Fq '0.5.7'; then
   printf 'Missing required dcg v0.5.7 installation (rerun .agents/setup)\n' >&2

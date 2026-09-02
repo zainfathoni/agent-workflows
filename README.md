@@ -129,7 +129,7 @@ After cloning this repo, bootstrap the `/sync-skills` skill once:
 ~/Code/GitHub/zainfathoni/agent-workflows/skills/install.sh
 ```
 
-Then invoke `/sync-skills` for all future updates and audits. It runs both scripts below, cleans up deprecated skills, and verifies the installation.
+Then invoke `/sync-skills` for all future updates and audits. It fast-forwards this repository, runs both scripts below, cleans up deprecated skills, and verifies the installation.
 
 For manual control or troubleshooting, the underlying scripts are:
 

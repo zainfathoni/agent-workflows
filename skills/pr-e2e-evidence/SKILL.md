@@ -71,11 +71,9 @@ Make the open PR body the default pre-merge evidence location. A repository conv
 - For GitHub-hosted attachments, read and follow [`reference/github-publishing.md`](reference/github-publishing.md).
 - For a Drive archive, read and follow [`reference/google-drive-docs-publishing.md`](reference/google-drive-docs-publishing.md).
 
-The GitHub comment editor may generate attachment URLs, but never submit an upload-only comment; clear it after extracting the URLs.
+Group evidence by scenario or surface, preserve the existing template, and explain what each artifact demonstrates.
 
-Use `gh pr edit --body-file` or the browser edit UI. Group evidence by scenario or surface, preserve the existing template, and explain what each artifact demonstrates.
-
-**Complete when:** the chosen review location renders the structured evidence and mapped media, its access boundary is verified independently, existing content remains intact, and no unintended edit or comment was created.
+**Complete when:** the chosen review location renders the structured evidence and mapped media, its access boundary is verified independently, and existing content remains intact.
 
 ### 7. Follow the deployment
 

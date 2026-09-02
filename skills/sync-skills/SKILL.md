@@ -20,13 +20,26 @@ Require readable executable files at `skills/update-upstream.sh` and `skills/ins
 
 **Complete when:** one root has both required scripts and its canonical path is recorded. Otherwise stop and report every lookup attempted.
 
-## 2. Resolve upstream and local roots
+## 2. Update the local skill source
 
-Read both scripts before running them. Resolve their paths using the current environment, including `HOME`, `AGENT_SKILLS_DIR`, `UPSTREAM_SKILLS_AGENTS`, `XDG_CONFIG_HOME`, `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `XDG_STATE_HOME`. Distinguish the canonical upstream root, every configured agent destination, the local install root, and the global lock file. Preserve script defaults when overrides are absent.
+Require a clean repository worktree, then fast-forward its checked-out branch from the configured upstream:
+
+```bash
+git -C "<ROOT>" status --short
+git -C "<ROOT>" pull --ff-only
+```
+
+Preserve local changes and divergent history. If either is present, stop mutation and report the exact repository state rather than installing stale local skills.
+
+**Complete when:** the worktree is clean, `git pull --ff-only` exits zero, and the checked-out commit equals its upstream branch.
+
+## 3. Resolve upstream and local roots
+
+Read both scripts from the updated checkout before running them. Resolve their paths using the current environment, including `HOME`, `AGENT_SKILLS_DIR`, `UPSTREAM_SKILLS_AGENTS`, `XDG_CONFIG_HOME`, `CLAUDE_CONFIG_DIR`, `CODEX_HOME`, and `XDG_STATE_HOME`. Distinguish the canonical upstream root, every configured agent destination, the local install root, and the global lock file. Preserve script defaults when overrides are absent.
 
 **Complete when:** every destination and lock path used by this run is listed as an absolute path and every configured agent is accepted by the upstream script.
 
-## 3. Update upstream skills
+## 4. Update upstream skills
 
 Run, without changing its environment or logic:
 
@@ -38,7 +51,7 @@ The script's own order is binding: deprecated/blocked cleanup, release-pinned up
 
 **Complete when:** the script exits zero and none of its checks report an error. A nonzero exit is a discrepancy; continue only with read-only verification so the final report captures the full state.
 
-## 4. Install local skills
+## 5. Install local skills
 
 Run:
 
@@ -50,7 +63,7 @@ Allow the script to replace symlinks. If it refuses a real directory, preserve t
 
 **Complete when:** the installer exits zero. On failure, continue only with read-only verification.
 
-## 5. Derive expectations and verify exhaustively
+## 6. Derive expectations and verify exhaustively
 
 Derive expectations fresh from `update-upstream.sh`, `install.sh`, and the repository filesystem; never copy their inventories into this skill.
 
@@ -62,9 +75,9 @@ Derive expectations fresh from `update-upstream.sh`, `install.sh`, and the repos
 
 **Complete when:** every derived item has an explicit expected-versus-actual result, every relevant root has been enumerated (including overlapping roots), all symlink targets have been resolved, and no check was skipped.
 
-## 6. Report
+## 7. Report
 
-Report `Sync complete` only when both scripts exited zero and every verification passed. Include counts for upstream, deprecated, and local skills and state that discrepancies are none.
+Report `Sync complete` only when the repository fast-forwarded or was already current, both scripts exited zero, and every verification passed. Include counts for upstream, deprecated, and local skills and state that discrepancies are none.
 
 Otherwise report `Sync incomplete`, followed by every discrepancy as an exact path or command, expected state, and actual state, including script exit failures. Never claim completion from partial checks.
 

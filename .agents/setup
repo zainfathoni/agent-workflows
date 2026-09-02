@@ -10,7 +10,6 @@ printf 'Orb setup: checking repository prerequisites\n'
 
 missing_packages=()
 command -v git >/dev/null 2>&1 || missing_packages+=(git)
-command -v gh >/dev/null 2>&1 || missing_packages+=(gh)
 command -v jq >/dev/null 2>&1 || missing_packages+=(jq)
 command -v python3 >/dev/null 2>&1 || missing_packages+=(python3)
 command -v curl >/dev/null 2>&1 || missing_packages+=(curl)
@@ -22,6 +21,39 @@ if [ "${#missing_packages[@]}" -gt 0 ]; then
 else
   printf 'Orb setup: system packages already available\n'
 fi
+
+required_gh_version=2.99.0
+installed_gh_version=""
+if command -v gh >/dev/null 2>&1; then
+  installed_gh_version=$(gh version | awk 'NR == 1 { print $3 }')
+fi
+
+if [ -z "$installed_gh_version" ] || ! dpkg --compare-versions "$installed_gh_version" ge "$required_gh_version"; then
+  printf 'Orb setup: installing GitHub CLI >= %s from the official repository\n' "$required_gh_version"
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+  sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+  printf 'deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' \
+    "$(dpkg --print-architecture)" \
+    | sudo tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+  sudo apt-get update
+  sudo apt-get install -y gh
+  packaged_gh_version=$(/usr/bin/gh version | awk 'NR == 1 { print $3 }')
+  if ! dpkg --compare-versions "$packaged_gh_version" ge "$required_gh_version"; then
+    printf 'Official GitHub CLI package >= %s required; found %s\n' \
+      "$required_gh_version" "$packaged_gh_version" >&2
+    exit 1
+  fi
+  sudo ln -sf /usr/bin/gh /usr/local/bin/gh
+  installed_gh_version=$(gh version | awk 'NR == 1 { print $3 }')
+fi
+
+if ! dpkg --compare-versions "$installed_gh_version" ge "$required_gh_version"; then
+  printf 'GitHub CLI >= %s required; found %s\n' "$required_gh_version" "$installed_gh_version" >&2
+  exit 1
+fi
+printf 'Orb setup: GitHub CLI %s available\n' "$installed_gh_version"
 
 dcg_version=v0.5.7
 dcg_bin="$HOME/.local/bin/dcg"
